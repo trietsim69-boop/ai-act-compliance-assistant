@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/index.py": { "includeFiles": "corpus/*.md", "maxDuration": 300 }
+  },
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index" }]
+}

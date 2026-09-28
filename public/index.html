@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Norrin — EU AI Act check</title>
+<style>
+  :root { --bg:#fafaf9; --fg:#1c1917; --muted:#57534e; --card:#fff; --line:#e7e5e4; --accent:#1d4ed8;
+          --ok:#15803d; --warn:#b45309; --bad:#b91c1c; --na:#78716c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161412; --fg:#f5f5f4; --muted:#a8a29e; --card:#1f1c1a; --line:#35302c; --accent:#93b4ff;
+            --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --na:#a8a29e; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 system-ui, sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; } h2 { font-size: 1.15rem; margin: 32px 0 12px; }
+  p.lead, .muted { color: var(--muted); }
+  form, .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  label { display:block; font-weight:600; margin:16px 0 6px; } label:first-child { margin-top:0; }
+  input, textarea, button { font:inherit; color:inherit; }
+  input[type=password], textarea { width:100%; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); }
+  textarea { min-height: 110px; resize: vertical; }
+  button { margin-top:20px; padding:10px 18px; border:0; border-radius:8px; background:var(--accent); color:var(--bg); font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  .hint { font-size:.9rem; color:var(--muted); margin-top:4px; }
+  #status { margin-top:16px; } .error { color:var(--bad); }
+  .facts { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; }
+  .fact small { display:block; color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; }
+  .fact b { font-size:1.1rem; }
+  .chip { display:inline-block; padding:1px 8px; border-radius:999px; font-size:.8rem; font-weight:600; border:1px solid currentColor; white-space:nowrap; }
+  .met, .supported, .minimal_risk { color:var(--ok); } .gap, .contradicted, .prohibited, .high_risk { color:var(--bad); }
+  .unclear, .insufficient, .limited_risk { color:var(--warn); } .not_applicable { color:var(--na); }
+  table { width:100%; border-collapse:collapse; } th, td { text-align:left; vertical-align:top; padding:10px 8px; border-top:1px solid var(--line); }
+  th { font-size:.85rem; color:var(--muted); border-top:0; }
+  .claim { border-top:1px solid var(--line); padding:12px 0; } .claim:first-child { border-top:0; }
+  blockquote { margin:8px 0; padding:6px 12px; border-left:3px solid var(--line); color:var(--muted); }
+  details summary { cursor:pointer; color:var(--accent); font-size:.9rem; } details p { white-space:pre-wrap; font-size:.9rem; }
+  .table-wrap { overflow-x:auto; }
+  .warnings { border-color:var(--warn); margin-top:24px; } .warnings ul { margin:8px 0 0; padding-left:20px; }
+  mark { background:color-mix(in srgb, var(--warn) 30%, transparent); color:inherit; border-radius:2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>EU AI Act check</h1>
+  <p class="lead">Upload documents describing your AI use case. You get a preliminary assessment against the EU AI Act and Commission guidance, with every claim quoted from its source. Decision support only, not legal advice.</p>
+
+  <form id="form">
+    <label for="code">Access code</label>
+    <input id="code" type="password" autocomplete="current-password">
+    <label for="files">Case documents</label>
+    <input id="files" type="file" multiple accept=".pdf,.docx,.pptx,.html,.htm,.csv,.txt,.md">
+    <div class="hint">PDF, Word, PowerPoint, HTML, CSV, text or Markdown · 4 MB total · scanned PDFs need OCR first</div>
+    <label for="description">Or describe the use case</label>
+    <textarea id="description" placeholder="What does the system do, who is affected, who decides, which models does it use?"></textarea>
+    <button id="submit">Assess</button>
+    <div id="status" role="status" aria-live="polite"></div>
+  </form>
+
+  <div id="result"></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const el = (tag, attrs = {}, ...kids) => {
+  const node = Object.assign(document.createElement(tag), attrs);
+  node.append(...kids.flat(Infinity).filter(k => k != null && k !== false));
+  return node;
+};
+const words = s => String(s ?? "").replaceAll("_", " ");
+const chip = value => el("span", { className: "chip " + value }, words(value));
+
+try { $("code").value = localStorage.getItem("code") || ""; } catch {}
+
+$("form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const body = new FormData();
+  for (const file of $("files").files) body.append("files", file);
+  body.append("description", $("description").value);
+  try { localStorage.setItem("code", $("code").value); } catch {}
+
+  $("submit").disabled = true;
+  $("result").replaceChildren();
+  const started = Date.now();
+  const tick = () => $("status").textContent =
+    `Assessing… ${Math.round((Date.now() - started) / 1000)} s (usually 1–3 minutes)`;
+  tick();
+  const timer = setInterval(tick, 1000);
+  try {
+    const response = await fetch("/api/assess", { method: "POST", body, headers: { "x-access-code": $("code").value } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail?.error || data.detail || `Request failed (${response.status})`);
+    $("status").textContent = "";
+    render(data);
+  } catch (error) {
+    $("status").replaceChildren(el("span", { className: "error" }, error.message));
+  } finally {
+    clearInterval(timer);
+    $("submit").disabled = false;
+  }
+});
+
+// Offsets are Python code points; Array.from splits by code point, so emoji don't shift the highlight.
+function highlighted(text, start, end) {
+  const cps = Array.from(text);
+  return el("p", {}, cps.slice(0, start).join(""), el("mark", {}, cps.slice(start, end).join("")), cps.slice(end).join(""));
+}
+
+function render(data) {
+  const r = data.report;
+  const o = r.overview;
+  const fact = (name, value, cls = "") => el("div", { className: "fact" }, el("small", {}, name), el("b", { className: cls }, words(value)));
+
+  const download = el("button", { type: "button", onclick: () => {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    el("a", { href: url, download: "ai-act-assessment.json" }).click();
+    URL.revokeObjectURL(url);
+  } }, "Download JSON");
+
+  $("result").replaceChildren(...[
+    r.warnings.length ? el("div", { className: "card warnings", role: "note" },
+      el("b", {}, "Check before relying on this"), el("ul", {}, r.warnings.map(w => el("li", {}, w)))) : null,
+
+    el("h2", {}, "Result"),
+    el("div", { className: "card" },
+      el("div", { className: "facts" },
+        fact("Risk tier", o.risk_tier, o.risk_tier), fact("AI system", o.ai_system), fact("Your role", o.role),
+        fact("General-purpose AI", o.gpai_involved), fact("Confidence", o.confidence)),
+      el("p", {}, o.summary), el("p", { className: "muted" }, o.reasoning)),
+
+    el("h2", {}, "Obligations"),
+    el("div", { className: "card table-wrap" }, el("table", {},
+      el("thead", {}, el("tr", {}, el("th", {}, "Requirement"), el("th", {}, "Status"), el("th", {}, "Why"))),
+      el("tbody", {}, r.requirements.map(q => el("tr", {},
+        el("td", {}, q.requirement),
+        el("td", {}, chip(q.status), q.unverified ? el("div", { className: "hint unclear" }, "not backed by supported claims") : null),
+        el("td", {}, q.explanation, q.claim_ids?.length ? el("div", { className: "hint" }, "Claims: " + q.claim_ids.join(", ")) : null)))))),
+
+    el("h2", {}, "Claims and sources"),
+    el("div", { className: "card" }, r.claims.map(c => el("div", { className: "claim" },
+      el("div", {}, el("b", {}, c.id + " "), chip(c.status), " ", c.text),
+      el("div", { className: "hint" }, c.reason),
+      c.evidence.map(e => el("div", {},
+        el("blockquote", {}, `“${e.quote}”`),
+        el("details", {}, el("summary", {}, e.label === e.source ? e.source : `${e.source} · ${e.label}`),
+          highlighted(e.passage, e.start, e.end)))),
+      c.evidence.length ? null : el("div", { className: "hint" }, "No verified source.")))),
+
+    r.questions.length ? [
+      el("h2", {}, "Questions to answer"),
+      el("div", { className: "card" }, el("ul", {}, r.questions.map(q => el("li", {}, el("b", {}, q.topic + ": "), q.question))))
+    ] : null,
+
+    el("p", { className: "hint" }, r.disclaimer),
+    download,
+  ].flat().filter(Boolean));
+}
+</script>
+</body>
+</html>
