@@ -6,6 +6,13 @@ from src.config import CORPUS_DIR
 from src.law import corpus, document_passages, search
 
 
+def test_ai_act_has_every_recital_article_and_annex_in_order():
+    text = (CORPUS_DIR / "eu_ai_act.md").read_text(encoding="utf-8")
+    assert [int(n) for n in re.findall(r"(?m)^## Recital (\d+)$", text)] == list(range(1, 181))
+    assert [int(n) for n in re.findall(r"(?m)^## Chapter [IVXLC]+ › Article (\d+) — ", text)] == list(range(1, 114))
+    assert len(re.findall(r"(?m)^## Annex [IVXLC]+ — ", text)) == 13
+
+
 def test_ids_are_stable_heading_keys_and_passages_are_exact_source_slices():
     headings = defaultdict(set)
     sources = {f.stem: f.read_text(encoding="utf-8") for f in CORPUS_DIR.glob("*.md")}
