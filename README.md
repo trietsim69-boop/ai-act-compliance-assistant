@@ -39,10 +39,18 @@ python -m evals.cases        # live: runs the 20 reference cases through DeepSee
 
 ## Corpus
 
-`corpus/` holds Markdown versions of the AI Act (converted from the EUR-Lex HTML, one `##` heading per article, recital and annex) and the Commission guidelines on the AI-system definition and on prohibited practices (one `##` heading per numbered section). All downloaded sources live in `corpus/src/`: the AI Act as EUR-Lex HTML (plus the Official Journal PDF for reference; its two-column layout separates recital numbers from their text, so the build uses the HTML) and the guideline PDFs. `python -m scripts.build_corpus` regenerates every `.md` deterministically and fails if a section listed in a PDF's table of contents has no heading in the body.
+`corpus/` holds Markdown versions of the AI Act (one `##` heading per recital, article and annex) and the Commission guidelines (one `##` heading per numbered section). These files are generated: the downloaded sources (EUR-Lex HTML, Commission PDFs) and `scripts/build_corpus.py` live on the `corpus-build` branch, so `main` carries only what the app needs.
+
+To update the corpus:
+
+```bash
+git switch corpus-build && git merge main       # keep the build branch current
+# add the source to corpus/src/ and its title to TITLES in scripts/build_corpus.py
+python -m scripts.build_corpus && python -m pytest -q && git add corpus && git commit -m "corpus: ..."
+git switch main && git checkout corpus-build -- "corpus/*.md"
+python -m evals.retrieval && python -m pytest -q  # then commit on main
+```
 
 ## Deploy
 
 `vercel.json` deploys `api/index.py` as a Python function with the corpus bundled. Set `DEEPSEEK_API_KEY` and `ACCESS_CODE` in the Vercel project; clients send the code in the `x-access-code` header. Uploads are capped at 4 MB total. No database or vector store: the corpus index is rebuilt in memory on cold start (<1 s) and uploads are never stored.
-
-To add a source: put the EUR-Lex HTML (for legislation) or the PDF (for guidance) in `corpus/src/`, add its `# Title (status, date)` to `TITLES` in `scripts/build_corpus.py`, and run the build.
