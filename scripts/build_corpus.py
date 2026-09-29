@@ -8,13 +8,13 @@ in corpus/src/ for reference only: its two-column layout separates recital numbe
 import re
 import sys
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 from markitdown import MarkItDown
 
 from src.config import CORPUS_DIR
 
 TITLES = {
-    "eu_ai_act": "Regulation (EU) 2024/1689 — Artificial Intelligence Act (OJ L, 12.7.2024)",
+    "eu_ai_act": "Regulation (EU) 2024/1689 — Artificial Intelligence Act, consolidated 27.7.2026 (incl. Digital Omnibus, Regulation (EU) 2026/1744)",
     "guidelines_prohibited_practices": "Commission Guidelines on prohibited AI practices (C(2025) 5052 final, 29.7.2025, non-binding)",
     "guidelines_ai_system_definition": "Commission Guidelines on the definition of an AI system (C(2025) 5053 final, 29.7.2025, non-binding)",
     "guidelines_transparency_art50": "Commission Guidelines on the transparency obligations of Article 50 AI Act (C(2026) 5054 final, 20.7.2026, non-binding)",
@@ -65,51 +65,89 @@ def structure(text: str) -> str:
     return "\n\n".join(out)
 
 
+_BLOCKS = {"p", "div", "table", "tbody", "tr", "td"}
+_SKIP = {"oj-ti-art", "oj-sti-art", "oj-doc-ti", "title-article-norm", "stitle-article-norm",  # titles (OJ / consolidated)
+         "title-annex-1", "title-annex-2", "modref", "footnote"}                              # amendment notes
+_AMENDMENT = re.compile(r"[►▼◄](?:B|M\d+)?")  # consolidated-text markers such as ►M1 ◄
+_MARKER = re.compile(r"[‘']?(?:\(?(?:\d+[a-z]?|[a-z]{1,3})\)?\.?|—)")  # "1.", "1a.", "(a)", "(ba)", "(12)", "‘(68)", "—"
+
+
 def _text(node) -> str:
-    return " ".join(node.get_text().split())  # also folds non-breaking spaces
+    return " ".join(_AMENDMENT.sub("", node.get_text()).split())  # also folds non-breaking spaces
 
 
-def _paragraphs(node) -> list[str]:
-    """Body paragraphs; a table row (marker cell + text cell) becomes '(a) text'."""
-    out = []
-    for child in node.find_all(True, recursive=False):
-        if child.name == "p":
-            if not {"oj-ti-art", "oj-sti-art", "oj-doc-ti"} & set(child.get("class", [])) and _text(child):
-                out.append(_text(child))
-        elif child.name == "table":
-            for row in child.select(":scope > tbody > tr, :scope > tr"):
-                cells = row.find_all("td", recursive=False)
-                rest = _paragraphs(cells[-1]) or [""]
-                marker = _text(cells[0]) if len(cells) > 1 else ""
-                out += [f"{marker} {rest[0]}".strip(), *rest[1:]]
+def _leaves(node) -> list[str]:
+    """Text of each innermost block in document order (inline text between blocks counts as one)."""
+    out, inline = [], []
+
+    def flush():
+        if text := " ".join(_AMENDMENT.sub("", "".join(inline)).split()):
+            out.append(text)
+        inline.clear()
+
+    for child in node.children:
+        if isinstance(child, Tag) and set(child.get("class", [])) & _SKIP:
+            continue
+        if isinstance(child, Tag) and child.name in _BLOCKS:
+            flush()
+            out += _leaves(child)
         else:
-            out += _paragraphs(child)
+            inline.append(child.get_text() if isinstance(child, Tag) else str(child))
+    flush()
     return out
 
 
-def eurlex(html: str) -> str:
-    """EUR-Lex HTML -> '## Recital N' / '## Chapter X › Article N — Title' / '## Annex X — Title' sections."""
+def _paragraphs(node) -> list[str]:
+    """A marker on its own ('(a)' table cell, '1.' span) joins the text that follows it."""
     out = []
-    for root in BeautifulSoup(html, "html.parser").find_all("div", id=re.compile(r"^(rct_\d+|art_\d+|anx_[IVXLC]+)$")):
+    for text in _leaves(node):
+        if out and _MARKER.fullmatch(out[-1]):
+            out[-1] += " " + text
+        elif out and re.fullmatch(r"[;:,.]+", text):  # punctuation left after a nested list
+            out[-1] += text
+        else:
+            out.append(text)
+    return out
+
+
+def eurlex(html: str, kinds: str = "rct art anx") -> str:
+    """EUR-Lex HTML (OJ or consolidated) -> '## Recital N' / '## Chapter X › Article N — Title' / '## Annex X — Title'."""
+    out = []
+    for root in BeautifulSoup(html, "html.parser").find_all("div", id=re.compile(r"^(rct_\d+|art_\d+[a-z]?|anx_[IVXLC]+)$")):
         kind, number = root["id"].split("_")
+        if kind not in kinds.split():
+            continue
         if kind == "rct":
             out.append(f"## Recital {number}")
         elif kind == "art":
             chapter = root.find_parent("div", id=re.compile(r"^cpt_[IVXLC]+$"))["id"][4:]
-            out.append(f"## Chapter {chapter} › Article {number} — {_text(root.find(class_='oj-sti-art')).rstrip('`')}")  # '`': EUR-Lex typo in Art. 1
+            title = _text(root.find(class_=["oj-sti-art", "stitle-article-norm"])).rstrip("`")  # '`': EUR-Lex typo in Art. 1
+            out.append(f"## Chapter {chapter} › Article {number} — {title}")
         else:
-            out.append(f"## Annex {number} — {_text(root.find_all('p', class_='oj-doc-ti')[1])}")
+            titles = root.find_all(class_="title-annex-2") or root.find_all(class_="title-annex-1")[1:] or root.find_all(class_="oj-doc-ti")[1:]
+            out.append(f"## Annex {number} — {_text(titles[0])}" if titles else f"## Annex {number}")  # Annex XIV has no title
         out += _paragraphs(root)
     return "\n\n".join(out)
+
+
+def ai_act() -> tuple[str, str]:
+    """Articles and annexes from the consolidated text when present; recitals always from the OJ (consolidations omit them)."""
+    src = CORPUS_DIR / "src"
+    oj = (src / "eu_ai_act.html").read_text(encoding="utf-8")
+    if not (src / "eu_ai_act_consolidated.html").exists():
+        return eurlex(oj), "eu_ai_act.html"
+    consolidated = (src / "eu_ai_act_consolidated.html").read_text(encoding="utf-8")
+    return eurlex(oj, "rct") + "\n\n" + eurlex(consolidated, "art anx"), "eu_ai_act.html (recitals), eu_ai_act_consolidated.html"
 
 
 def main() -> None:
     md = MarkItDown()
     for stem, title in TITLES.items():
-        html = CORPUS_DIR / "src" / f"{stem}.html"
-        source = html if html.exists() else CORPUS_DIR / "src" / f"{stem}.pdf"
-        body = eurlex(html.read_text(encoding="utf-8")) if html.exists() else structure(md.convert(str(source)).text_content)
-        text = f"# {title}\n\nSource: corpus/src/{source.name}, converted by scripts/build_corpus.py.\n\n{body}\n"
+        if stem == "eu_ai_act":
+            body, source = ai_act()
+        else:
+            body, source = structure(md.convert(str(CORPUS_DIR / "src" / f"{stem}.pdf")).text_content), f"{stem}.pdf"
+        text = f"# {title}\n\nSource: corpus/src/{source}, converted by scripts/build_corpus.py.\n\n{body}\n"
         (CORPUS_DIR / f"{stem}.md").write_text(text, encoding="utf-8", newline="\n")
         print(f"{stem}.md: {body.count('## ')} headings", file=sys.stderr)
 
