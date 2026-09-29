@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "reviewed_on": "2026-09-28",
+  "reviewed_on": "2026-09-29",
   "review_method": "Agent-reviewed against the bundled EU_AI_Act.html and its converted Markdown before running retrieval. Provision labels are manually annotated; no generated assessment or inferred chunk metadata is used as ground truth. q25+ were picked by reading the provision each question needs in corpus/*.md (AI Act and both Commission guidelines) before running retrieval.",
-  "scope": "Passage retrieval, not legal conclusions or semantic support. A negated scenario still needs the relevant rule or exception. q01-q24 target the regulation; q25+ also target the Commission guidelines; q59+ the Article 50, GPAI and draft high-risk guidelines. Style is derived: queries citing an Article/Annex/Recital are 'legal', the rest 'lay'.",
+  "scope": "Passage retrieval, not legal conclusions or semantic support. A negated scenario still needs the relevant rule or exception. q01-q24 target the regulation; q25+ also target the Commission guidelines; q59+ the Article 50, GPAI and draft high-risk guidelines. Style is derived: queries citing an Article/Annex/Recital are 'legal', the rest 'lay'. From 2026-09-29 the Act is the consolidated text of 27.7.2026 (Regulation (EU) 2026/1744); q46/q52 quotes updated to the amended wording.",
   "queries": [
     {
       "id": "q01",
@@ -744,8 +744,8 @@
       "expected": [
         {
           "source": "EU_AI_Act",
-          "provision": "Article 4",
-          "quote": "shall take measures to ensure, to their best extent, a sufficient level of AI literacy of their staff"
+          "provision": "Article 4(1)",
+          "quote": "shall take measures to support the development of AI literacy of their staff"
         }
       ]
     },
@@ -840,7 +840,7 @@
         {
           "source": "EU_AI_Act",
           "provision": "Article 113(a)",
-          "quote": "Chapters I and II shall apply from 2 February 2025;"
+          "quote": "Chapters I and II shall apply from 2 February 2025"
         }
       ]
     },
@@ -1091,6 +1091,66 @@
           "source": "guidelines_high_risk_draft_2_annex_i",
           "provision": "para (15)",
           "quote": "sets the classification rules for AI systems intended to be used as a safety component of a product"
+        }
+      ]
+    },
+    {
+      "id": "q69",
+      "case": null,
+      "tags": [
+        "exact_reference"
+      ],
+      "query": "Article 113 date of application of high-risk rules for Annex III systems after the Digital Omnibus",
+      "expected": [
+        {
+          "source": "EU_AI_Act",
+          "provision": "Article 113(c)(i)",
+          "quote": "2 December 2027 as regards AI systems classified as high-risk pursuant to Article 6(2) and Annex III"
+        }
+      ]
+    },
+    {
+      "id": "q70",
+      "case": "predictive_maintenance",
+      "tags": [
+        "scenario"
+      ],
+      "query": "From when do the high-risk requirements apply to AI built into machinery and other regulated products?",
+      "expected": [
+        {
+          "source": "EU_AI_Act",
+          "provision": "Article 113(c)(ii)",
+          "quote": "2 August 2028 as regards AI systems classified as high-risk pursuant to Article 6(1) and Annex I"
+        }
+      ]
+    },
+    {
+      "id": "q71",
+      "case": "hr_screening",
+      "tags": [
+        "scenario"
+      ],
+      "query": "Our CV-ranking tool is high-risk. When do we have to comply with the high-risk requirements?",
+      "expected": [
+        {
+          "source": "EU_AI_Act",
+          "provision": "Article 113(c)(i)",
+          "quote": "2 December 2027 as regards AI systems classified as high-risk pursuant to Article 6(2) and Annex III"
+        }
+      ]
+    },
+    {
+      "id": "q72",
+      "case": null,
+      "tags": [
+        "scenario"
+      ],
+      "query": "An app lets users create fake nude images of real, identifiable people. Is that banned?",
+      "expected": [
+        {
+          "source": "EU_AI_Act",
+          "provision": "Article 5(1)(ba)",
+          "quote": "generates or manipulates realistic images, videos, audio or similar material of an identifiable natural person’s intimate parts"
         }
       ]
     }
