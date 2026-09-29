@@ -1,4 +1,4 @@
-# Norrin AI Act Compliance Assistant
+# AI Act Compliance Assistant
 
 Upload documents describing an AI use case (PDF, DOCX, PPTX, HTML, CSV, TXT, MD) and get a preliminary, citation-backed assessment against the EU AI Act and Commission guidance: whether it is an AI system, risk tier, your role, which obligations apply, and whether your documents show they are met.
 
