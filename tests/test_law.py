@@ -10,14 +10,14 @@ def test_ai_act_has_every_recital_article_and_annex_in_order():
     text = (CORPUS_DIR / "eu_ai_act.md").read_text(encoding="utf-8")
     assert [int(n) for n in re.findall(r"(?m)^## Recital (\d+)$", text)] == list(range(1, 181))
     assert [int(n) for n in re.findall(r"(?m)^## Chapter [IVXLC]+ › Article (\d+) — ", text)] == list(range(1, 114))
-    assert len(re.findall(r"(?m)^## Annex [IVXLC]+ — ", text)) == 13
+    assert len(re.findall(r"(?m)^## Annex [IVXLC]+( — |$)", text)) == 14  # Annex XIV (2026/1744) has no title
 
 
 def test_ids_are_stable_heading_keys_and_passages_are_exact_source_slices():
     headings = defaultdict(set)
     sources = {f.stem: f.read_text(encoding="utf-8") for f in CORPUS_DIR.glob("*.md")}
     for id_, p in corpus().items():
-        assert re.fullmatch(r"[a-z0-9_]+/(intro|art-\d+|rec-\d+|anx-[IVXLC]+|s-[\dIVX.]+)/\d+", id_), id_
+        assert re.fullmatch(r"[a-z0-9_]+/(intro|art-\d+[a-z]?|rec-\d+|anx-[IVXLC]+|s-[\dIVX.]+)/\d+", id_), id_
         headings[id_.rsplit("/", 1)[0]].add(p["label"])
         assert sources[id_.split("/")[0]][p["start"]:p["end"]] == p["text"]
     assert all(len(labels) == 1 for labels in headings.values())  # one heading per key
@@ -40,6 +40,7 @@ def test_search_finds_the_right_provision():
     labels = [c["label"] for c in search("Article 50 inform natural persons interacting with an AI system")]
     assert any("Article 50" in label for label in labels[:3])
     assert search("the of and") == []
+    assert search("Article 53(1)(b) documentation for downstream providers")[0]["id"].startswith("eu_ai_act/art-53/")
 
 
 def test_every_gold_quote_is_in_the_corpus():
@@ -49,7 +50,7 @@ def test_every_gold_quote_is_in_the_corpus():
 
 
 def test_retrieval_recall_does_not_regress():
-    # gold v2 baseline 2026-09-27 (58 queries, 71 quotes): 70.4% overall, lay 54.3%, legal 100%
+    # 2026-09-29 (consolidated Act, 72 queries / 86 quotes): 74.4% overall, lay 63.2%, legal 96.6%
     assert recall(10) >= 0.70
     assert recall(10, "lay") >= 0.50
     assert recall(10, "legal") >= 0.95
