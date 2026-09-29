@@ -16,7 +16,7 @@ Decision support only — not legal advice.
 
 ```bash
 python -m venv .venv && . .venv/bin/activate      # Windows: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt pytest httpx
+pip install -r requirements.txt
 cp .env.example .env                              # add DEEPSEEK_API_KEY
 ```
 
@@ -29,26 +29,30 @@ uvicorn api.index:app --reload                     # UI at http://localhost:8000
 
 `POST /api/assess` (multipart `files[]`, `description`) returns the raw result plus `report`: deterministic display sections with warnings and the exact span of every quote. Bad input is 422; a failing or unusable model answer is 502.
 
-## Test and evaluate
+## Development branch
+
+`main` is the deployable app. Everything used to build and check it lives on the `corpus-build` branch: tests (`tests/`), retrieval and live evals (`evals/`), the downloaded corpus sources (`corpus/src/`) and `scripts/build_corpus.py`. Never merge `corpus-build` into `main` — that would bring all of it back.
 
 ```bash
+git switch corpus-build && git merge main && git merge my-change   # test a change branched from main
+pip install pytest httpx
 python -m pytest -q          # offline, no API key
-python -m evals.retrieval    # corpus search recall on 71 hand-reviewed quotes, split lay/legal queries
-python -m evals.cases        # live: runs the 20 reference cases through DeepSeek (tier, GPAI, AI system, role)
+python -m evals.retrieval    # corpus search recall on hand-reviewed quotes, split lay/legal queries
+python -m evals.cases        # live: 20 reference cases through DeepSeek (tier, GPAI, AI system, role)
 ```
+
+Then open a PR from `my-change` (not `corpus-build`) into `main`.
 
 ## Corpus
 
-`corpus/` holds Markdown versions of the AI Act (one `##` heading per recital, article and annex) and the Commission guidelines (one `##` heading per numbered section). These files are generated: the downloaded sources (EUR-Lex HTML, Commission PDFs) and `scripts/build_corpus.py` live on the `corpus-build` branch, so `main` carries only what the app needs.
-
-To update the corpus:
+`corpus/` holds Markdown versions of the AI Act (consolidated text including the Digital Omnibus; one `##` heading per recital, article and annex) and the Commission guidelines (one `##` heading per numbered section). They are generated on `corpus-build`:
 
 ```bash
-git switch corpus-build && git merge main       # keep the build branch current
+git switch corpus-build && git merge main
 # add the source to corpus/src/ and its title to TITLES in scripts/build_corpus.py
-python -m scripts.build_corpus && python -m pytest -q && git add corpus && git commit -m "corpus: ..."
-git switch main && git checkout corpus-build -- "corpus/*.md"
-python -m evals.retrieval && python -m pytest -q  # then commit on main
+python -m scripts.build_corpus && python -m pytest -q && python -m evals.retrieval
+git add corpus && git commit -m "corpus: ..."
+git switch -c corpus-update main && git checkout corpus-build -- "corpus/*.md"   # commit, push, PR into main
 ```
 
 ## Deploy
