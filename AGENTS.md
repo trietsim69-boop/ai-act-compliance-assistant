@@ -7,7 +7,7 @@
 - `src/report.py::build_report` is the deterministic Presenter: pure, no LLM calls, no I/O, no new conclusions (only result fields and fixed templates). The UI renders `report`, not the raw assessment.
 - Errors: `CaseError` (bad input) → 422; model/provider failures → 502 with a plain message. An unusable Verifier reply makes every verdict `insufficient`; never treat a missing verdict as supported.
 - Never put eval case names, fixtures or mock answers in `src/`. Tests fake `src.agents.chat` with monkeypatch.
-- Corpus changes happen on the `corpus-build` branch, which holds the downloaded sources and `scripts/build_corpus.py` (see README). Never hand-edit the generated `corpus/*.md` on `main`; copy them from `corpus-build`, then run `python -m evals.retrieval` and `python -m pytest -q`.
+- `main` is the deployable app only. Tests (`tests/`), evals (`evals/`), corpus sources (`corpus/src/`) and `scripts/build_corpus.py` live on the `corpus-build` branch (see README). Test a change by merging its branch into `corpus-build`; open PRs to `main` from the change branch, never from `corpus-build`. Never hand-edit the generated `corpus/*.md`.
 - Gold quotes in `evals/retrieval_gold.json` are picked by reading the provision a question needs, never from search output. Do not lower the recall floors in `tests/test_law.py` to make a change pass.
 - Before merging agent or prompt changes, run `python -m evals.cases` (live API) and report the table.
 - Never commit `.env`.
