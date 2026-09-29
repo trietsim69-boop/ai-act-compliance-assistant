@@ -66,8 +66,8 @@ Setup: `python -m pip install -r requirements.txt pytest httpx` into `.venv`. Ke
   - Files: `src/agents.py` (prompts only). Scope: S.
 
 ### Phase 3: Corpus update (Q7b)
-- [ ] Task 5 (blocked: EUR-Lex refuses scripted downloads; owner: user downloads the HTML): Add the Digital Omnibus on AI — Regulation (EU) 2026/1744, OJ 24.7.2026, in force 27.7.2026 — (Council final approval 29 June 2026) — ideally the consolidated AI Act text from EUR-Lex once published; otherwise the amending regulation as its own `.md`.
-  - Acceptance: corpus states the new high-risk dates (2 Dec 2027 / 2 Aug 2028) and the new prohibition; a gold question for each.
+- [x] Task 5: Digital Omnibus on AI — Regulation (EU) 2026/1744 (OJ 24.7.2026, in force 27.7.2026)
+  - Done 2026-09-29: consolidated AI Act of 27.7.2026 (CELEX 02024R1689-20260727) fetched as XHTML from the Publications Office's Cellar service (EUR-Lex's website blocks scripts; Cellar does not). Articles/annexes come from the consolidation, recitals from the OJ (consolidations omit recitals). Corpus now states the new high-risk dates (2 Dec 2027 Annex III / 2 Aug 2028 Annex I) and the new Art. 5(1)(ba)/(bb) prohibitions; adds Arts. 4a, 60a, 75a–d and Annex XIV. Gold: q46/q52 updated to the amended wording (Art. 4 AI literacy is now 'take measures to support'), 4 new questions (both dates, the (ba) prohibition). Explicitly cited provisions now lead the Act results in `law.search` (legal R@10 93.1% → 96.6%, R@5 89.7% → 96.6%). R@10 74.4% overall. Build tool versions matter: guidelines were built with markitdown 0.1.5 / pdfminer 20251230.
 - [x] Task 6: Add final Article 50 transparency guidelines (20 July 2026), draft high-risk classification guidelines (19 May 2026, label as DRAFT in the title), GPAI guidelines (July 2025).
   - Acceptance: each file has a `# Title (status, date)` line; ≥ 2 new gold questions per document; recall@10 stays ≥ 70%.
   - Verify: `python -m evals.retrieval`, `python -m pytest -q`.

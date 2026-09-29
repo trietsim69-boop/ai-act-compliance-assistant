@@ -13,13 +13,14 @@ _STOP = set("a an the is are was were be been to of for in on at by with and or 
 
 
 ACT = "eu_ai_act"  # corpus stem of the regulation itself; everything else is guidance
+_CITED = {"article": "art", "annex": "anx", "recital": "rec"}
 
-_KEYS = [(r"(?:Chapter [IVXLC]+ › )?Article (\d+)\b", "art-{}"), (r"Recital (\d+)\b", "rec-{}"),
+_KEYS = [(r"(?:Chapter [IVXLC]+ › )?Article (\d+[a-z]?)\b", "art-{}"), (r"Recital (\d+)\b", "rec-{}"),
          (r"Annex ([IVXLC]+)\b", "anx-{}"), (r"(\d+(?:\.\d+)*|[IVX]+) ", "s-{}")]
 
 
 def heading_key(label: str, title: str) -> str:
-    """'Chapter IV › Article 50 — …' -> 'art-50'; guideline '2.5.1 …' -> 's-2.5.1'; text before any ## -> 'intro'."""
+    """'Chapter IV › Article 50 — …' -> 'art-50' (4a -> 'art-4a'); guideline '2.5.1 …' -> 's-2.5.1'; text before any ## -> 'intro'."""
     if label == title:
         return "intro"
     for pattern, key in _KEYS:
@@ -63,6 +64,9 @@ def search(query: str, k: int = 8) -> list[dict]:
     rows = _index().execute("SELECT id FROM p WHERE p MATCH ? ORDER BY bm25(p, 0, 5, 1) LIMIT ?",
                             (expression, 6 * k)).fetchall()
     hits = [corpus()[r[0]] for r in rows]
-    act = [c for c in hits if c["id"].startswith(f"{ACT}/")]
+    cited = tuple(f"{ACT}/{_CITED[kind.lower()]}-{num.upper() if kind.lower() == 'annex' else num}/"
+                  for kind, num in re.findall(r"\b(Article|Annex|Recital)\s+(\d+[a-z]?|[IVXLC]+)\b", query, re.I))
+    # A provision named in the query ("Article 53(1)(b)") leads the Act results; BM25 order is kept within each group.
+    act = sorted((c for c in hits if c["id"].startswith(f"{ACT}/")), key=lambda c: not c["id"].startswith(cited))
     guidance = [c for c in hits if not c["id"].startswith(f"{ACT}/")]
     return ([c for pair in zip(act, guidance) for c in pair] + act[len(guidance):] + guidance[len(act):])[:k]

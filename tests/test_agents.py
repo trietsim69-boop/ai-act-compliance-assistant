@@ -3,7 +3,8 @@ import json
 import src.agents as agents
 from src.law import search
 
-LAW = search("Article 50 inform natural persons interacting with an AI system")[0]
+LAW_QUERY = "Article 50 inform natural persons interacting with an AI system"
+LAW = search(LAW_QUERY)[0]
 CASE = [{"id": "doc1:1", "source": "brief.md", "label": "brief.md", "text": "Our chatbot answers customer questions."}]
 
 
@@ -30,7 +31,7 @@ def fake_llm(replies):
 def test_bad_quote_is_dropped_and_triggers_one_revision(monkeypatch):
     good_quote = " ".join(LAW["text"].split()[:12])
     tool_call = {"role": "assistant", "content": "", "tool_calls": [
-        {"id": "t1", "type": "function", "function": {"name": "search_law", "arguments": json.dumps({"query": "Article 50"})}}]}
+        {"id": "t1", "type": "function", "function": {"name": "search_law", "arguments": json.dumps({"query": LAW_QUERY})}}]}
     verdicts = lambda s: {"role": "assistant", "content": json.dumps({"verdicts": [
         {"claim_id": "c1", "status": "supported", "reason": "ok"}, {"claim_id": "c2", "status": s, "reason": "r"}]})}
     chat, calls = fake_llm([
