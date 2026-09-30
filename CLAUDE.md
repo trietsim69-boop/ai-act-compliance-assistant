@@ -4,7 +4,7 @@ Setup, commands and the corpus-update recipe are in [README.md](README.md).
 
 ## Pipeline invariants
 
-- Pipeline: `src/ingest.py` (files → Markdown → passages) → `src/agents.py` (Assessor with `search_law` tool → verbatim-quote check → Verifier → at most one revision) → `src/report.py`. `src/law.py` searches `corpus/*.md`. `api/index.py` is the HTTP entry point and serves the static UI in `public/`.
+- Pipeline: `src/ingest.py` (files → Markdown → passages) → `src/agents.py` (Assessor with `search_law` tool → verbatim-quote check → Verifier → at most one revision) → `src/report.py`. `src/law.py` searches `corpus/*.md`. `api/index.py` is the HTTP entry point and serves the UI: `public/index.html`, built from `web/` with `npm run build` (commit source and built file together).
 - Every claim must quote a passage the model was shown; facts quote case documents, legal claims quote the corpus. Keep that check deterministic (`src/citations.py`).
 - Quote offsets are computed by `check_references`, never taken from the model: `ref.start/end` index the passage text, and every passage is an exact slice `source[start:end]`.
 - Corpus passage ids are `{stem}/{heading key}/{n}` (e.g. `eu_ai_act/art-50/1`, `art-4a` for lettered articles) so saved citations survive corpus edits. Changing `heading_key` renames ids; treat it as a breaking change.
