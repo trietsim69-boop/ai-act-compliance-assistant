@@ -1,5 +1,5 @@
 // Case state for one analysis session. The server is stateless: files, description and the last result live
-// here, in memory, and nothing is stored server-side (docs/ui-requirements.md UI-SES-2).
+// here, in memory, and nothing is stored server-side.
 import { create } from "zustand";
 import { toast } from "sonner";
 
