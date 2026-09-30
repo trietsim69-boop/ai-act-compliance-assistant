@@ -25,3 +25,8 @@ Setup, commands and the corpus-update recipe are in [README.md](README.md).
 - By default a change goes on its own branch and reaches `main` as a GitHub PR the user merges; commit directly on `main` when the user asks for it. UI work lives on `frontend`; corpus rebuilds on `corpus-build`. Merge `main` into `corpus-build`, never the reverse (it would bring the sources into `main`).
 - The Windows checkout uses `core.autocrlf=true`, so files written with LF show as modified. Judge real changes with `git diff`, which normalises line endings.
 - `.env` stays local; it holds the API keys.
+
+## Deployment
+
+- Production: https://ai-act-compliance-assistant.vercel.app (Vercel project `ai-act-compliance-assistant`, linked with the CLI; GitHub is not connected, so pushes do not deploy). Deploy with `vercel deploy` (preview), then `vercel promote <url>` when the user asks for production. `DEEPSEEK_API_KEY` and `ACCESS_CODE` are set in Vercel for Production and Preview; never write the access code into the repo.
+- `.vercelignore` keeps `.env`, `data/` and dev-only folders out of CLI uploads (they ignore `.gitignore`).
