@@ -1,0 +1,24 @@
+{
+  "name": "ai-act-ui",
+  "private": true,
+  "description": "UI for the AI Act Compliance Assistant. `npm run build` writes one self-contained file: public/index.html",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "sample": "python make_sample.py"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.8.0",
+    "clsx": "^2.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sonner": "^2.0.8",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.1",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}

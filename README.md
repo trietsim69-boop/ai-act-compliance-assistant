@@ -27,6 +27,8 @@ python -m src.agents path/to/case.pdf other.docx   # prints the JSON result
 uvicorn api.index:app --reload                     # UI at http://localhost:8000, API at POST /api/assess
 ```
 
+The UI source is in `web/` (React + Vite); `npm run build` there rewrites `public/index.html`, a single self-contained file. See [web/README.md](web/README.md).
+
 `POST /api/assess` (multipart `files[]`, `description`) returns the raw result plus `report`: deterministic display sections with warnings and the exact span of every quote. Bad input is 422; a failing or unusable model answer is 502.
 
 ## Test and evaluate

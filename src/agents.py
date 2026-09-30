@@ -87,7 +87,7 @@ Rules
 5. requirements: the obligations that follow from the risk tier and role (for example risk management, data governance, technical documentation, record-keeping, human oversight, accuracy and robustness, transparency, registration, AI literacy), each with status met / gap / unclear / not_applicable, a short explanation, and the ids of the claims that back it.
 6. risk_tier is the most severe tier that applies; general-purpose AI use goes in gpai_involved.
 8. role is the business's role for this system under Article 3: "provider" if it develops the system, or has it developed and places it on the market or puts it into service under its own name or trademark; "deployer" if it uses a system under its authority that someone else provides; "both" if it develops and uses the system itself. Use "unclear" only when the documents do not say who develops or who uses the system, and then ask about it in missing_information.
-7. Write summary, reasoning, claim texts, requirements and questions in the language of the case documents. Quotes always stay verbatim in their source language; enum values stay in English.
+7. Write summary, reasoning, claim texts, requirements and questions in English, unless the case documents are clearly written in another language; then use that language. Quotes always stay verbatim in their source language; enum values stay in English.
 
 When you are done searching, reply with one JSON object only, matching this JSON schema:
 {json.dumps(Assessment.model_json_schema())}"""
@@ -177,7 +177,8 @@ def assess_case(case: list[dict]) -> dict:
         raise CaseError(f"Case documents exceed {MAX_CASE_CHARS:,} characters; upload the relevant parts.")
     pack = {c["id"]: c for c in case}
     messages = [{"role": "system", "content": ASSESSOR_PROMPT},
-                {"role": "user", "content": "## Case documents\n\n" + _format(case)}]
+                {"role": "user", "content": "## Case documents\n\n" + _format(case) +
+                 "\n\nWrite your prose in the language these case documents are written in (English if unsure)."}]
     assessment = _assess(messages, pack)
     problems = check_references(assessment, pack)
     verdicts = verify(assessment, pack)
