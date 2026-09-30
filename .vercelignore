@@ -1,0 +1,15 @@
+# CLI uploads ignore .gitignore; keep secrets, local data and dev-only files out of deployments.
+.env
+.venv/
+.tmp/
+.pytest_cache/
+__pycache__/
+data/
+web/node_modules/
+Claude outputs/
+*.pdf
+tests/
+evals/
+tasks/
+docs/
+scripts/
