@@ -8,7 +8,7 @@ Setup, commands and the corpus-update recipe are in [README.md](README.md).
 - Every claim must quote a passage the model was shown; facts quote case documents, legal claims quote the corpus. Keep that check deterministic (`src/citations.py`).
 - Quote offsets are computed by `check_references`, never taken from the model: `ref.start/end` index the passage text, and every passage is an exact slice `source[start:end]`.
 - Corpus passage ids are `{stem}/{heading key}/{n}` (e.g. `eu_ai_act/art-50/1`, `art-4a` for lettered articles) so saved citations survive corpus edits. Changing `heading_key` renames ids; treat it as a breaking change.
-- `law.search` alternates Act and guidance hits, and a provision named in the query ("Article 53(1)(b)") leads the Act results. Both exist because commentary otherwise outranks the law it discusses; measure any ranking change with `evals.retrieval`.
+- `law.search` expands everyday words with the Act's vocabulary (`_PLAIN_TO_ACT`, hand-written: add general translations, never phrases copied from gold answers), alternates Act and guidance hits, and puts a provision named in the query ("Article 53(1)(b)") first among the Act results. The alternation and citation boost exist because commentary otherwise outranks the law it discusses. `law.K` (12) is both the passages per search and the k that recall is reported at; measure any ranking change with `evals.retrieval`.
 - `src/report.py::build_report` is the deterministic Presenter: pure, no LLM calls, no I/O, no new conclusions (only result fields and fixed templates). The UI renders `report`, not the raw assessment; `build_report`'s return value is the UI contract.
 - Errors: `CaseError` (bad input) → 422; model/provider failures → 502 with a plain message. An unusable Verifier reply makes every verdict `insufficient`; a missing verdict never counts as supported.
 - Keep eval case names, fixtures and mock answers out of `src/`. Tests fake `src.agents.chat` with monkeypatch.
@@ -17,7 +17,7 @@ Setup, commands and the corpus-update recipe are in [README.md](README.md).
 
 - `corpus/*.md` is generated on the `corpus-build` branch, which alone holds the downloaded sources (`corpus/src/`) and `scripts/build_corpus.py`. The AI Act is the consolidated EUR-Lex text of 27.7.2026 (incl. the Digital Omnibus, Regulation (EU) 2026/1744) with recitals from the original OJ; guidelines are Commission PDFs. Copy regenerated files into `main`; hand-edits are overwritten by the next build.
 - Gold quotes in `evals/retrieval_gold.json` are picked by reading the provision a question needs, never from search output. When the law changes, requote from the new text. The recall floors in `tests/test_law.py` stay where they are; fix the ranking instead.
-- `python -m pytest -q` and `python -m evals.retrieval` are offline and free. `python -m evals.cases` calls the live DeepSeek API and costs money: run it before merging agent or prompt changes, or when asked, and report the table.
+- `python -m pytest -q` and `python -m evals.retrieval` are offline and free. `python -m evals.cases` calls the live DeepSeek API and costs money: run it before merging agent or prompt changes, or when asked, and report the table. `evals.cases` also reports `saw`: whether the Assessor's own searches returned each case's `must_see` provision, and logs every query to `data/eval_queries.jsonl`.
 
 ## Git workflow
 
