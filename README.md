@@ -9,7 +9,7 @@ Decision support only. It is not legal advice and does not certify compliance.
 ## How it works
 
 1. **Ingest.** Uploads (PDF, DOCX, PPTX, HTML, CSV, TXT, MD; 4 MB total) and/or a free-text description are converted to Markdown with MarkItDown and split into citable passages (`doc1:3`). Scans without a text layer are rejected; run OCR first. Nothing is stored.
-2. **Assessor agent.** Reads the case and calls a `search_law` tool as often as it needs (SQLite FTS5/BM25 over `corpus/*.md`, alternating Act and guidance hits, with provisions named in the query first). It returns structured JSON: claims with verbatim quotes, obligations (met / gap / unclear / not applicable) and open questions.
+2. **Assessor agent.** Reads the case and calls a `search_law` tool as often as it needs (SQLite FTS5/BM25 over `corpus/*.md`; everyday words are expanded with the Act's vocabulary, Act and guidance hits alternate, and provisions named in the query come first). It returns structured JSON: claims with verbatim quotes, obligations (met / gap / unclear / not applicable) and open questions.
 3. **Quote check.** Deterministic: every quote must appear verbatim in a passage the model was shown; facts must quote the case, legal claims must quote the law. Exact offsets are computed here, never taken from the model.
 4. **Verifier agent.** Judges each claim against its quoted passages: supported, contradicted or insufficient. A missing or unusable verdict counts as insufficient.
 5. **One revision.** If a quote or verdict failed, the Assessor gets the feedback once and the result is checked again.
@@ -27,8 +27,9 @@ Guidance is non-binding; the UI labels every citation as your document, the AI A
 
 ## Quality (measured 2026-09-29/30)
 
-- **Retrieval:** recall@8 (the 8 passages the Assessor sees per search) is 73.3% on 86 hand-reviewed gold quotes, counting only hits in the expected source document. Everyday-language queries reach 61.4%; legal-term queries 96.6%, but every one of them names the provision it needs. The gold set was written and tuned against by the same author, so treat these as optimistic until a held-out set exists.
-- **Live assessments:** 18–19 of 20 reference cases correct on risk tier, AI-system status, GPAI involvement and role, with nearly every claim verified as supported. The misses are run-to-run variance on one tier and one role case.
+- **Retrieval in the live app:** in 20 reference cases, the Assessor's own searches found the key provision each case needed in 19 of 20 (95%).
+- **Retrieval benchmark:** on 86 hand-reviewed gold quotes, search returns the right passage in its top 12 (what the Assessor sees per search) 80.2% of the time: 96.6% for queries in legal terms, 71.9% for everyday-language queries. Both sets were written by the developer, so results on independent data may be lower.
+- **Live assessments:** 20 of 20 reference cases correct on risk tier, AI-system status, GPAI involvement and role in the latest run (earlier runs: 18–19 of 20; the misses are run-to-run variance), with nearly every claim verified as supported.
 
 ## Known limitations
 

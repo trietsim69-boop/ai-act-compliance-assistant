@@ -50,7 +50,7 @@ def test_every_gold_quote_is_in_the_corpus():
 
 
 def test_retrieval_recall_does_not_regress():
-    # measured at the Assessor's k (src.law.K = 8), hits only in the expected source; 2026-10-01: 73.3%, lay 61.4%, legal 96.6%
+    # measured at the Assessor's k (src.law.K = 12), hits only in the expected source; 2026-10-01: 80.2%, lay 71.9%, legal 96.6%
     assert recall() >= 0.70
     assert recall(only="lay") >= 0.50
     assert recall(only="legal") >= 0.95

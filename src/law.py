@@ -55,12 +55,40 @@ def _index() -> sqlite3.Connection:
     return db
 
 
-K = 8  # passages per search_law call; evals.retrieval reports recall at this k
+K = 12  # passages per search_law call; evals.retrieval reports recall at this k
+
+# Everyday words → the Act's own vocabulary, so BM25 can match a business description to the provision.
+# ponytail: hand-written word map; replace with embedding search if it keeps growing past ~50 entries.
+_PLAIN_TO_ACT = {
+    r"chat ?bots?|virtual assistants?|voice assistants?": "interact directly with natural persons",
+    r"cvs?|resumes?|hiring|applicants?|candidates?|job ads?|interviews?": "recruitment selection of natural persons",
+    r"deep ?fakes?|fake (?:videos?|images?|photos?|audio)|face ?swaps?": "deep fake generates manipulates image audio video content",
+    r"nudes?|naked|intimate|porn\w*": "intimate parts sexually explicit",
+    r"face search|face matching|facial|faces": "facial recognition biometric identification",
+    r"cctv|scrap\w+|crawl\w*": "untargeted scraping facial images",
+    r"emotions?|mood|anger|angry|stress\w*|feelings?": "emotion recognition infer emotions",
+    r"credit ?scores?|loans?|lending|creditworth\w*": "creditworthiness credit score",
+    r"insurance|premiums?|underwrit\w+": "risk assessment pricing life health insurance",
+    r"police|crimes?|criminal|offen[cs]es?": "law enforcement criminal offence",
+    r"schools?|students?|exams?|universit\w+|admissions?|grading": "education vocational training",
+    r"employees?|staff|workers?|workplace|gig|couriers?": "workers work-related relationships",
+    r"fines?|penalt\w+|sanctions?": "administrative fines",
+    r"privately|private use|hobby|personal use": "purely personal non-professional activity",
+    r"research|lab|laboratory": "scientific research and development",
+    r"children|kids?|child|elderly|older people|seniors?": "vulnerabilities age",
+    r"social scor\w*|citizen scor\w*|rat\w+ (?:residents|citizens)": "social score evaluation classification social behaviour",
+    r"dashboards?|averages?|statistic\w*|rules? engines?": "basic data processing",
+    r"llms?|gpt|chatgpt|foundation models?|language models?": "general-purpose AI model",
+    r"machinery|machines?|safety part": "safety component product",
+    r"emergency|ambulances?|dispatch\w*": "emergency calls dispatching",
+}
+_PLAIN = [(re.compile(rf"\b(?:{pattern})\b", re.I), words) for pattern, words in _PLAIN_TO_ACT.items()]
 
 
 def search(query: str, k: int = K) -> list[dict]:
     """BM25 hits, alternating the Act with guidance so commentary cannot crowd out the law it discusses."""
-    terms = [t for t in re.findall(r"\w+", query.lower()) if t not in _STOP]
+    expanded = query + "".join(f" {words}" for pattern, words in _PLAIN if pattern.search(query))
+    terms = [t for t in re.findall(r"\w+", expanded.lower()) if t not in _STOP]
     if not terms:
         return []
     expression = " OR ".join(f'"{t}"' for t in dict.fromkeys(terms))

@@ -49,6 +49,6 @@ def recall(k: int = K, only: str | None = None, gold: list[dict] = GOLD) -> floa
 if __name__ == "__main__":
     gold = load(sys.argv[1]) if len(sys.argv) > 1 else GOLD
     print(f"{len(gold)} queries, {sum(len(q['expected']) for q in gold)} quotes; the Assessor sees {K} passages per search")
-    for k in (5, K, 10):
+    for k in sorted({5, 10, K}):
         mark = "  <- headline" if k == K else ""
         print(f"recall@{k}: {recall(k, gold=gold):.1%}  (lay {recall(k, 'lay', gold):.1%}, legal {recall(k, 'legal', gold):.1%}){mark}")
