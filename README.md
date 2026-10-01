@@ -25,7 +25,7 @@ The model is DeepSeek (`deepseek-chat`) through its OpenAI-compatible API; any c
 
 Guidance is non-binding; the UI labels every citation as your document, the AI Act, guidance or draft guidance.
 
-## Quality (measured 2026-09-29/30)
+## Quality (measured 2026-10-01)
 
 - **Retrieval in the live app:** in 20 reference cases, the Assessor's own searches found the key provision each case needed in 19 of 20 (95%).
 - **Retrieval benchmark:** on 86 hand-reviewed gold quotes, search returns the right passage in its top 12 (what the Assessor sees per search) 80.2% of the time: 96.6% for queries in legal terms, 71.9% for everyday-language queries. Both sets were written by the developer, so results on independent data may be lower.
