@@ -55,7 +55,10 @@ def _index() -> sqlite3.Connection:
     return db
 
 
-def search(query: str, k: int = 8) -> list[dict]:
+K = 8  # passages per search_law call; evals.retrieval reports recall at this k
+
+
+def search(query: str, k: int = K) -> list[dict]:
     """BM25 hits, alternating the Act with guidance so commentary cannot crowd out the law it discusses."""
     terms = [t for t in re.findall(r"\w+", query.lower()) if t not in _STOP]
     if not terms:

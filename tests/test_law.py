@@ -50,7 +50,7 @@ def test_every_gold_quote_is_in_the_corpus():
 
 
 def test_retrieval_recall_does_not_regress():
-    # 2026-09-29 (consolidated Act, 72 queries / 86 quotes): 74.4% overall, lay 63.2%, legal 96.6%
-    assert recall(10) >= 0.70
-    assert recall(10, "lay") >= 0.50
-    assert recall(10, "legal") >= 0.95
+    # measured at the Assessor's k (src.law.K = 8), hits only in the expected source; 2026-10-01: 73.3%, lay 61.4%, legal 96.6%
+    assert recall() >= 0.70
+    assert recall(only="lay") >= 0.50
+    assert recall(only="legal") >= 0.95

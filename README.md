@@ -27,7 +27,7 @@ Guidance is non-binding; the UI labels every citation as your document, the AI A
 
 ## Quality (measured 2026-09-29/30)
 
-- **Retrieval:** recall@10 74.4% on 86 hand-reviewed gold quotes (legal-term queries 96.6%, everyday-language queries 63.2%). The Assessor searches with legal terms.
+- **Retrieval:** recall@8 (the 8 passages the Assessor sees per search) is 73.3% on 86 hand-reviewed gold quotes, counting only hits in the expected source document. Everyday-language queries reach 61.4%; legal-term queries 96.6%, but every one of them names the provision it needs. The gold set was written and tuned against by the same author, so treat these as optimistic until a held-out set exists.
 - **Live assessments:** 18–19 of 20 reference cases correct on risk tier, AI-system status, GPAI involvement and role, with nearly every claim verified as supported. The misses are run-to-run variance on one tier and one role case.
 
 ## Known limitations
@@ -56,9 +56,13 @@ python -m src.agents path/to/case.pdf other.docx   # or: print the JSON result f
 ```bash
 pip install pytest httpx
 python -m pytest -q          # offline, no API key
-python -m evals.retrieval    # corpus search recall on the gold quotes, split lay/legal
+python -m evals.retrieval    # corpus search recall@8 on the gold quotes, split lay/legal
 python -m evals.cases        # live: 20 reference cases through DeepSeek (costs API credit)
 ```
+
+`evals.cases` also reports `saw`: whether the Assessor's own searches ever returned each case's `must_see` provision (e.g. Annex III point 4(a) for HR screening), and logs every query to `data/eval_queries.jsonl`.
+
+**Held-out set:** to measure retrieval without tuning bias, have someone who has not worked on the ranking write questions in the same format as `evals/retrieval_gold.json` (query, expected source and verbatim quote) into `evals/retrieval_heldout.json`, then run `python -m evals.retrieval evals/retrieval_heldout.json`. Never tune against it.
 
 ## Deploy (Vercel)
 
