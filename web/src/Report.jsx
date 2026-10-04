@@ -1,10 +1,9 @@
 // The page: intake → run → report in the brief's six-section order, with evidence in a side sheet.
 import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
-import { useCase, downloadJSON } from "./store";
+import { useCase, downloadJSON, totalBytes, MAX_BYTES } from "./store";
 import {
   Chip, TIER, ROLE, words, SourceTag, sourceType, where, FileRows, useFilePicker, Progress, ErrorBox,
-  Warnings, LowConfidence, CORPUS,
+  Warnings, LowConfidence, CORPUS, cx,
 } from "./shared";
 
 const SECTIONS = [
@@ -22,7 +21,7 @@ export default function Report() {
         <span className="brand">AI Act Compliance Assistant</span>
         {done && <button type="button" className="btn ghost sm no-print" onClick={reset}>New Case</button>}
       </header>
-      <div className={clsx("layout", done && "has-toc")}>
+      <div className={cx("layout", done && "has-toc")}>
         {done && (
           <nav className="toc no-print" aria-label="Report sections">
             {SECTIONS.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
@@ -37,7 +36,7 @@ export default function Report() {
 }
 
 function Intake() {
-  const { phase, code, setCode, description, setDescription, run } = useCase();
+  const { phase, code, setCode, description, setDescription, run, files, rejected } = useCase();
   const [empty, setEmpty] = useState(false);
   const descRef = useRef(null);
   const submit = (e) => {
@@ -48,6 +47,7 @@ function Intake() {
   };
   const { input, open, onDrop } = useFilePicker();
   const running = phase === "running";
+  const over = totalBytes(files) > MAX_BYTES;
   return (
     <>
       <h1>Check an AI Use Case Against the EU AI Act</h1>
@@ -64,6 +64,7 @@ function Intake() {
           <span className="hint">or drop them here · PDF, DOCX, PPTX, HTML, CSV, TXT, MD · 4 MB total · up to 500,000 characters of text · scanned PDFs need OCR first</span>
         </div>
         <FileRows disabled={running} />
+        {rejected.length > 0 && <p className="field-error" role="alert">Not a supported format: {rejected.join(", ")}. Use PDF, DOCX, PPTX, HTML, CSV, TXT or MD.</p>}
 
         <label htmlFor="case-description">Or describe the use case</label>
         <textarea ref={descRef} id="case-description" aria-invalid={empty || undefined} aria-describedby={empty ? "empty-error" : undefined} name="description" autoComplete="off" value={description} onChange={(e) => setDescription(e.target.value)}
@@ -77,7 +78,7 @@ function Intake() {
         </details>
 
         <div className="row actions">
-          <button type="submit" className="btn primary" disabled={running}>
+          <button type="submit" className="btn primary" disabled={running || over}>
             {running ? "Assessing…" : "Assess"}
           </button>
         </div>

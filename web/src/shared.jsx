@@ -1,8 +1,8 @@
 // Building blocks for the report page. Data contract: the `report` object from src/report.py (build_report).
-import { useRef } from "react";
-import clsx from "clsx";
-import { Dialog } from "@base-ui/react/dialog";
+import { useEffect, useRef } from "react";
 import { useCase, ERRORS, FORMATS, MAX_BYTES, totalBytes } from "./store";
+
+export const cx = (...names) => names.filter(Boolean).join(" ");
 
 export const TIER = {
   prohibited: { label: "Prohibited", icon: "⛔", tone: "bad" },
@@ -26,7 +26,7 @@ export const ROLE = { provider: "Provider", deployer: "Deployer", both: "Provide
 export function Chip({ value, map = STATUS, className }) {
   const m = map[value] ?? { label: words(value), icon: "", tone: "muted" };
   return (
-    <span className={clsx("chip", `tone-${m.tone}`, className)}>
+    <span className={cx("chip", `tone-${m.tone}`, className)}>
       <span aria-hidden="true">{m.icon}</span> {m.label}
     </span>
   );
@@ -50,7 +50,7 @@ export const where = (ev) => (ev.label === ev.source ? shortSource(ev) : ev.labe
 export function Passage({ ev, className }) {
   const cps = Array.from(ev.passage);
   return (
-    <p className={clsx("passage", className)} translate="no">
+    <p className={cx("passage", className)} translate="no">
       {cps.slice(0, ev.start).join("")}
       <mark>{cps.slice(ev.start, ev.end).join("")}</mark>
       {cps.slice(ev.end).join("")}
@@ -92,6 +92,12 @@ export function ClaimBody({ c }) {
 // Side sheet for a claim, or an obligation and the claims behind it (UI-EV-1, UI-EV-6).
 export function EvidenceSheet() {
   const { focus, data, setFocus } = useCase();
+  const ref = useRef(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (focus && !d.open) d.showModal();
+    else if (!focus && d.open) d.close();
+  }, [focus]);
   const r = data?.report;
   let title = "", body = null;
   if (r && focus?.type === "claim") {
@@ -113,19 +119,16 @@ export function EvidenceSheet() {
       </>
     );
   }
+  // Native modal <dialog>: showModal() gives the backdrop, Escape, an inert page behind it and focus return.
   return (
-    <Dialog.Root open={!!focus} onOpenChange={(o) => !o && setFocus(null)}>
-      <Dialog.Portal>
-        <Dialog.Backdrop className="sheet-backdrop" />
-        <Dialog.Popup className="sheet">
-          <div className="sheet-top">
-            <Dialog.Title className="sheet-title">{title}</Dialog.Title>
-            <Dialog.Close className="btn ghost" aria-label="Close evidence">✕</Dialog.Close>
-          </div>
-          <div className="sheet-body">{body}</div>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <dialog ref={ref} className="sheet" aria-labelledby="sheet-title" onClose={() => setFocus(null)}
+            onClick={(e) => e.target === e.currentTarget && e.currentTarget.close()}>
+      <div className="sheet-top">
+        <h2 id="sheet-title" className="sheet-title">{title}</h2>
+        <button type="button" className="btn ghost" aria-label="Close evidence" onClick={() => ref.current.close()}>✕</button>
+      </div>
+      <div className="sheet-body">{body}</div>
+    </dialog>
   );
 }
 
@@ -156,7 +159,7 @@ export function FileRows({ disabled }) {
                   aria-label={`Remove ${f.name}`}>Remove</button>
         </li>
       ))}
-      <li className={clsx("files-total num", total > MAX_BYTES && "over")}>
+      <li className={cx("files-total num", total > MAX_BYTES && "over")}>
         {mb(total)} of 4 MB{total > MAX_BYTES && " — over the limit"}
       </li>
     </ul>
