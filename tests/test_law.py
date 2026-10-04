@@ -43,6 +43,15 @@ def test_search_finds_the_right_provision():
     assert search("Article 53(1)(b) documentation for downstream providers")[0]["id"].startswith("eu_ai_act/art-53/")
 
 
+def test_every_provision_named_in_the_query_is_returned():
+    # Assessor queries: Annex III ranks ~76th overall for the first; Annex IV took every Act slot from Article 11
+    for query, named in [("Annex III remote biometric identification", ["anx-III"]),
+                         ("Article 11 technical documentation Annex IV", ["art-11", "anx-IV"]),
+                         ("Article 6 high-risk classification Annex III", ["art-6", "anx-III"])]:
+        ids = [c["id"] for c in search(query)]
+        assert all(any(i.startswith(f"eu_ai_act/{n}/") for i in ids) for n in named), (query, ids)
+
+
 def test_every_gold_quote_is_in_the_corpus():
     texts = [" ".join(c["text"].split()) for c in corpus().values()]
     missing = [q["id"] for q in GOLD for r in q["expected"] if not any(" ".join(r["quote"].split()) in t for t in texts)]
