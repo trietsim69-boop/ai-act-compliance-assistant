@@ -67,11 +67,10 @@ python -m evals.cases        # live: 20 reference cases through DeepSeek (costs 
 
 ## Deploy (Vercel)
 
-The project is linked with the Vercel CLI (`vercel link`). `vercel.json` deploys `api/index.py` as a Python function with `corpus/*.md` bundled; Vercel serves `public/` statically. `.vercelignore` keeps `.env`, local data and dev-only files out of uploads.
+The Vercel project is connected to this GitHub repository: every push to `main` deploys to production, and every other branch gets a preview URL. `vercel.json` deploys `api/index.py` as a Python function with `corpus/*.md` bundled; Vercel serves `public/` statically. `.vercelignore` keeps `.env`, local data and dev-only files out of uploads.
 
 ```bash
-vercel deploy                    # preview deployment
-vercel promote <preview-url>     # make it production
+vercel deploy                    # manual preview deployment from your working tree
 ```
 
 Set `DEEPSEEK_API_KEY` and `ACCESS_CODE` for Production and Preview in the Vercel project (`vercel env add`). There is no database: the corpus index is built in memory on cold start and uploads are never stored.

@@ -2,6 +2,10 @@
 
 Setup, commands and the corpus-update recipe are in [README.md](README.md).
 
+Stack: Python 3.13, FastAPI, pydantic, the OpenAI SDK pointed at DeepSeek (`deepseek-chat`), MarkItDown for uploads, SQLite FTS5 (BM25) for search; UI in React 19 + Vite (`web/`). No database, no vector store, no server-side state.
+
+Decided, with measurements, so not to redo without new evidence: a vector store/embeddings (2026-10-01: MiniLM hybrid search added at most +1.2 points recall@12 over BM25 + word map, while the Assessor already translates business language into legal queries); the old Chroma pipeline (replaced by the ponytail rewrite; it scored lower).
+
 ## Pipeline invariants
 
 - Pipeline: `src/ingest.py` (files → Markdown → passages) → `src/agents.py` (Assessor with `search_law` tool → verbatim-quote check → Verifier → at most one revision) → `src/report.py`. `src/law.py` searches `corpus/*.md`. `api/index.py` is the HTTP entry point and serves the UI: `public/index.html`, built from `web/` with `npm run build` (commit source and built file together).
@@ -25,8 +29,9 @@ Setup, commands and the corpus-update recipe are in [README.md](README.md).
 - By default a change goes on its own branch and reaches `main` as a GitHub PR the user merges; commit directly on `main` when the user asks for it. UI work lives on `frontend`; corpus rebuilds on `corpus-build`. Merge `main` into `corpus-build`, never the reverse (it would bring the sources into `main`).
 - The Windows checkout uses `core.autocrlf=true`, so files written with LF show as modified. Judge real changes with `git diff`, which normalises line endings.
 - `.env` stays local; it holds the API keys.
+- History starts at the ponytail rewrite (2026-09-28). The full earlier history is the archived repo `ai-act-compliance-assistant-history` (git remote `history`); look there for the old Chroma pipeline, never merge it back.
 
 ## Deployment
 
-- Production: https://ai-act-compliance-assistant.vercel.app (Vercel project `ai-act-compliance-assistant`, linked with the CLI; GitHub is not connected, so pushes do not deploy). Deploy with `vercel deploy` (preview), then `vercel promote <url>` when the user asks for production. `DEEPSEEK_API_KEY` and `ACCESS_CODE` are set in Vercel for Production and Preview; never write the access code into the repo.
+- Production: https://ai-act-compliance-assistant.vercel.app (Vercel project `ai-act-compliance-assistant`, connected to the GitHub repo since 2026-10-04). Every push to `main` deploys to production, so pushing or merging to `main` is a release; every other branch gets a preview URL. `vercel deploy` still makes a manual preview. `DEEPSEEK_API_KEY` and `ACCESS_CODE` are set in Vercel for Production and Preview; never write the access code into the repo.
 - `.vercelignore` keeps `.env`, `data/` and dev-only folders out of CLI uploads (they ignore `.gitignore`).
