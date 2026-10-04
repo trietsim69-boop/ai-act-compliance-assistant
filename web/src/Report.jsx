@@ -61,7 +61,7 @@ function Intake() {
         {input}
         <div className="drop" onDragOver={(e) => e.preventDefault()} onDrop={running ? undefined : onDrop}>
           <button type="button" className="btn secondary" onClick={open} disabled={running}>Choose Files…</button>
-          <span className="hint">or drop them here · PDF, DOCX, PPTX, HTML, CSV, TXT, MD · 4 MB total · up to 100,000 characters of text · scanned PDFs need OCR first</span>
+          <span className="hint">or drop them here · PDF, DOCX, PPTX, HTML, CSV, TXT, MD · 4 MB total · up to 500,000 characters of text · scanned PDFs need OCR first</span>
         </div>
         <FileRows disabled={running} />
 

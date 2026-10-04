@@ -34,7 +34,7 @@ def test_end_to_end_with_scripted_model(monkeypatch, result):
 
 def test_empty_or_oversized_case_is_422():
     assert TestClient(api.app).post("/api/assess", data={"description": " "}).status_code == 422
-    assert TestClient(api.app).post("/api/assess", data={"description": "x " * 60_000}).status_code == 422
+    assert TestClient(api.app).post("/api/assess", data={"description": "x " * (agents.MAX_CASE_CHARS // 2 + 1)}).status_code == 422
 
 
 def test_model_failures_are_502_without_internals(monkeypatch):

@@ -4,6 +4,7 @@ import re
 import sqlite3
 from collections import Counter
 from functools import lru_cache
+from itertools import zip_longest
 
 from src.config import CORPUS_DIR
 from src.ingest import passages
@@ -92,12 +93,18 @@ def search(query: str, k: int = K) -> list[dict]:
     if not terms:
         return []
     expression = " OR ".join(f'"{t}"' for t in dict.fromkeys(terms))
-    rows = _index().execute("SELECT id FROM p WHERE p MATCH ? ORDER BY bm25(p, 0, 5, 1) LIMIT ?",
-                            (expression, 6 * k)).fetchall()
-    hits = [corpus()[r[0]] for r in rows]
-    cited = tuple(f"{ACT}/{_CITED[kind.lower()]}-{num.upper() if kind.lower() == 'annex' else num}/"
-                  for kind, num in re.findall(r"\b(Article|Annex|Recital)\s+(\d+[a-z]?|[IVXLC]+)\b", query, re.I))
-    # A provision named in the query ("Article 53(1)(b)") leads the Act results; BM25 order is kept within each group.
-    act = sorted((c for c in hits if c["id"].startswith(f"{ACT}/")), key=lambda c: not c["id"].startswith(cited))
+
+    def bm25(within: str, limit: int) -> list[dict]:
+        rows = _index().execute("SELECT id FROM p WHERE p MATCH ? AND id GLOB ? ORDER BY bm25(p, 0, 5, 1) LIMIT ?",
+                                (expression, within + "*", limit))
+        return [corpus()[r[0]] for r in rows]
+
+    hits = bm25("", 6 * k)
+    cited = dict.fromkeys(f"{ACT}/{_CITED[kind.lower()]}-{num.upper() if kind.lower() == 'annex' else num}/"
+                          for kind, num in re.findall(r"\b(Article|Annex|Recital)\s+(\d+[a-z]?|[IVXLC]+)\b", query, re.I))
+    # Provisions named in the query ("Article 53(1)(b)") lead the Act results. Each is searched on its own, so a low
+    # overall rank cannot drop it, and they take turns, so one cannot fill every Act slot; BM25 order within each.
+    named = [c for turn in zip_longest(*(bm25(prefix, k) for prefix in cited)) for c in turn if c]
+    act = named + [c for c in hits if c["id"].startswith(f"{ACT}/") and c not in named]
     guidance = [c for c in hits if not c["id"].startswith(f"{ACT}/")]
     return ([c for pair in zip(act, guidance) for c in pair] + act[len(guidance):] + guidance[len(act):])[:k]

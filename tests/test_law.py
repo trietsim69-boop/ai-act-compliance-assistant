@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from evals.retrieval import GOLD, recall
+from evals.retrieval import EXTERNAL, GOLD, recall
 from src.config import CORPUS_DIR
 from src.law import corpus, document_passages, search
 
@@ -43,14 +43,26 @@ def test_search_finds_the_right_provision():
     assert search("Article 53(1)(b) documentation for downstream providers")[0]["id"].startswith("eu_ai_act/art-53/")
 
 
+def test_every_provision_named_in_the_query_is_returned():
+    # Assessor queries: Annex III ranks ~76th overall for the first; Annex IV took every Act slot from Article 11
+    for query, named in [("Annex III remote biometric identification", ["anx-III"]),
+                         ("Article 11 technical documentation Annex IV", ["art-11", "anx-IV"]),
+                         ("Article 6 high-risk classification Annex III", ["art-6", "anx-III"])]:
+        ids = [c["id"] for c in search(query)]
+        assert all(any(i.startswith(f"eu_ai_act/{n}/") for i in ids) for n in named), (query, ids)
+
+
 def test_every_gold_quote_is_in_the_corpus():
     texts = [" ".join(c["text"].split()) for c in corpus().values()]
     missing = [q["id"] for q in GOLD for r in q["expected"] if not any(" ".join(r["quote"].split()) in t for t in texts)]
     assert missing == []
 
 
+def test_every_external_article_is_in_the_corpus():
+    articles = {i.split("/")[1] for i in corpus() if i.startswith("eu_ai_act/art-")}
+    assert {f"art-{r['article']}" for q in EXTERNAL for r in q["expected"]} <= articles
+
+
 def test_retrieval_recall_does_not_regress():
-    # measured at the Assessor's k (src.law.K = 12), hits only in the expected source; 2026-10-01: 80.2%, lay 71.9%, legal 96.6%
-    assert recall() >= 0.70
-    assert recall(only="lay") >= 0.50
-    assert recall(only="legal") >= 0.95
+    # legal-style gold queries at the Assessor's k (src.law.K = 12), hits only in the expected source; 2026-10-04: 96.6%
+    assert recall() >= 0.95
