@@ -56,7 +56,7 @@ def _index() -> sqlite3.Connection:
     return db
 
 
-K = 12  # passages per search_law call; evals.retrieval reports recall at this k
+K = 12  # passages per search_law call
 
 # Everyday words → the Act's own vocabulary, so BM25 can match a business description to the provision.
 # ponytail: hand-written word map; replace with embedding search if it keeps growing past ~50 entries.

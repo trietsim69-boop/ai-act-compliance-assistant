@@ -25,7 +25,7 @@ The model is DeepSeek (`deepseek-chat`) through its OpenAI-compatible API; any c
 
 Guidance is non-binding; the UI labels every citation as your document, the AI Act, guidance or draft guidance.
 
-## Quality (measured 2026-10-01; retrieval benchmark 2026-10-04)
+## Quality
 
 - **Retrieval in the live app:** in 20 reference cases, the Assessor's own searches found the key provision each case needed in 19 of 20 (95%).
 - **Retrieval benchmark:** on 171 independent questions from two other projects ([AI Act Evaluation Benchmark](https://github.com/davidath/ai-act-evaluation-benchmark), [ActLens](https://github.com/SyedAshhadIbrar/ActLens)), never used for tuning, search returns the right article in its top 12 (what the Assessor sees per search) for 87.1%.
@@ -52,19 +52,6 @@ python -m src.agents path/to/case.pdf other.docx   # or: print the JSON result f
 
 **UI:** React + Vite in `web/`; `npm run build` rewrites `public/index.html`, one self-contained file. See [web/README.md](web/README.md).
 
-## Test and evaluate
-
-```bash
-pip install pytest httpx
-python -m pytest -q          # offline, no API key
-python -m evals.retrieval    # search recall@12: legal-style gold quotes, then the external held-out set
-python -m evals.cases        # live: 20 reference cases through DeepSeek (costs API credit)
-```
-
-`evals.cases` also reports `saw`: whether the Assessor's own searches ever returned each case's `must_see` provision (e.g. Annex III point 4(a) for HR screening), and logs every query to `data/eval_queries.jsonl`.
-
-**Held-out sets:** `evals/retrieval_external.json` holds 171 questions written by other projects, with article-level labels; sources and licences are inside the file. `evals.retrieval` reports it after the gold set. Never tune against it. To measure another set, write it in the same format (an `expected` entry has either a verbatim `quote` or an `article`) and run `python -m evals.retrieval path/to/set.json`.
-
 ## Deploy (Vercel)
 
 The Vercel project is connected to this GitHub repository: every push to `main` deploys to production, and every other branch gets a preview URL. `vercel.json` deploys `api/index.py` as a Python function with `corpus/*.md` bundled; Vercel serves `public/` statically. `.vercelignore` keeps `.env`, local data and dev-only files out of uploads.
@@ -84,14 +71,13 @@ Set `DEEPSEEK_API_KEY` and `ACCESS_CODE` for Production and Preview in the Verce
 | `public/index.html` | Built UI (generated from `web/`) |
 | `web/` | UI source |
 | `corpus/` | Generated Markdown corpus |
-| `tests/`, `evals/` | Offline tests; retrieval gold set and live reference cases |
 
 **Corpus updates** happen on the `corpus-build` branch, which alone holds the downloaded sources and `scripts/build_corpus.py`:
 
 ```bash
 git switch corpus-build && git merge main
 # add the source to corpus/src/ and its title to TITLES in scripts/build_corpus.py
-python -m scripts.build_corpus && python -m pytest -q && python -m evals.retrieval
+python -m scripts.build_corpus
 git add corpus && git commit -m "corpus: ..."
 git switch -c corpus-update main && git checkout corpus-build -- "corpus/*.md"   # commit, push, open a PR
 ```
