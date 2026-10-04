@@ -25,10 +25,10 @@ The model is DeepSeek (`deepseek-chat`) through its OpenAI-compatible API; any c
 
 Guidance is non-binding; the UI labels every citation as your document, the AI Act, guidance or draft guidance.
 
-## Quality (measured 2026-10-01)
+## Quality (measured 2026-10-01; retrieval benchmark 2026-10-04)
 
 - **Retrieval in the live app:** in 20 reference cases, the Assessor's own searches found the key provision each case needed in 19 of 20 (95%).
-- **Retrieval benchmark:** on 86 hand-reviewed gold quotes, search returns the right passage in its top 12 (what the Assessor sees per search) 80.2% of the time: 96.6% for queries in legal terms, 71.9% for everyday-language queries. Both sets were written by the developer, so results on independent data may be lower.
+- **Retrieval benchmark:** on 171 independent questions from two other projects ([AI Act Evaluation Benchmark](https://github.com/davidath/ai-act-evaluation-benchmark), [ActLens](https://github.com/SyedAshhadIbrar/ActLens)), never used for tuning, search returns the right article in its top 12 (what the Assessor sees per search) for 87.1%.
 - **Live assessments:** 20 of 20 reference cases correct on risk tier, AI-system status, GPAI involvement and role in the latest run (earlier runs: 18–19 of 20; the misses are run-to-run variance), with nearly every claim verified as supported.
 
 ## Known limitations
@@ -57,13 +57,13 @@ python -m src.agents path/to/case.pdf other.docx   # or: print the JSON result f
 ```bash
 pip install pytest httpx
 python -m pytest -q          # offline, no API key
-python -m evals.retrieval    # corpus search recall@8 on the gold quotes, split lay/legal
+python -m evals.retrieval    # search recall@12: legal-style gold quotes, then the external held-out set
 python -m evals.cases        # live: 20 reference cases through DeepSeek (costs API credit)
 ```
 
 `evals.cases` also reports `saw`: whether the Assessor's own searches ever returned each case's `must_see` provision (e.g. Annex III point 4(a) for HR screening), and logs every query to `data/eval_queries.jsonl`.
 
-**Held-out set:** to measure retrieval without tuning bias, have someone who has not worked on the ranking write questions in the same format as `evals/retrieval_gold.json` (query, expected source and verbatim quote) into `evals/retrieval_heldout.json`, then run `python -m evals.retrieval evals/retrieval_heldout.json`. Never tune against it.
+**Held-out sets:** `evals/retrieval_external.json` holds 171 questions written by other projects, with article-level labels; sources and licences are inside the file. `evals.retrieval` reports it after the gold set. Never tune against it. To measure another set, write it in the same format (an `expected` entry has either a verbatim `quote` or an `article`) and run `python -m evals.retrieval path/to/set.json`.
 
 ## Deploy (Vercel)
 

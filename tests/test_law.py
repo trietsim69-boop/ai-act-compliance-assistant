@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 
-from evals.retrieval import GOLD, recall
+from evals.retrieval import EXTERNAL, GOLD, recall
 from src.config import CORPUS_DIR
 from src.law import corpus, document_passages, search
 
@@ -58,8 +58,11 @@ def test_every_gold_quote_is_in_the_corpus():
     assert missing == []
 
 
+def test_every_external_article_is_in_the_corpus():
+    articles = {i.split("/")[1] for i in corpus() if i.startswith("eu_ai_act/art-")}
+    assert {f"art-{r['article']}" for q in EXTERNAL for r in q["expected"]} <= articles
+
+
 def test_retrieval_recall_does_not_regress():
-    # measured at the Assessor's k (src.law.K = 12), hits only in the expected source; 2026-10-01: 80.2%, lay 71.9%, legal 96.6%
-    assert recall() >= 0.70
-    assert recall(only="lay") >= 0.50
-    assert recall(only="legal") >= 0.95
+    # legal-style gold queries at the Assessor's k (src.law.K = 12), hits only in the expected source; 2026-10-04: 96.6%
+    assert recall() >= 0.95
