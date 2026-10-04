@@ -1,0 +1,424 @@
+[
+  {
+    "name": "hr_screening",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "human oversight",
+      "decision impact",
+      "provider/deployer role"
+    ],
+    "documents": [
+      {
+        "name": "hr_process_note.md",
+        "text": "# Internal HR Process Note — Candidate Screening Pilot\r\n\r\n**Department:** People Operations  \r\n**Process owner:** Maria Chen, Head of Talent Acquisition\r\n\r\n## Current workflow\r\n\r\n1. Applicants submit CVs through our careers portal.\r\n2. TalentRank AI ingests applications nightly and assigns a ranking score.\r\n3. Recruiters review the **top 20 ranked candidates** each morning.\r\n4. Recruiters may override the ranking, add notes, or reject candidates before interview invitations are sent.\r\n\r\n## Human oversight\r\n\r\n- No candidate is rejected automatically without recruiter review in the pilot phase.\r\n- Final interview decisions remain with the hiring manager.\r\n- Recruiters can disable AI ranking for specific requisitions (e.g. executive hires).\r\n\r\n## Open questions\r\n\r\n- Whether the organisation is **provider or deployer** of the ranking model (vendor hosts the model; we configure job profiles).\r\n- Whether rejected candidates receive any explanation tied to the AI score.\r\n"
+      },
+      {
+        "name": "policy_human_review.md",
+        "text": "# HR Policy — AI-Assisted Hiring (Draft)\r\n\r\n**Status:** Internal draft — not yet approved by Legal\r\n\r\n## Scope\r\n\r\nThis policy covers use of third-party AI tools in **recruitment, candidate screening, and applicant ranking**.\r\n\r\n## Principles\r\n\r\n1. AI outputs are **recommendations only**; recruiters retain decision authority.\r\n2. All ranked shortlists must be reviewed by a qualified recruiter before candidates proceed.\r\n3. Protected characteristics must not be used as model inputs (gender, ethnicity, age, disability status).\r\n4. Applicants must be informed that AI assists the screening process (transparency notice in progress).\r\n\r\n## Provider / deployer\r\n\r\nNorrin HR Tech develops and hosts the TalentRank model. Our organisation configures job profiles and operates the system as a **deployer** in EU hiring processes.\r\n\r\n## Risk note\r\n\r\nLegal has flagged that employment-related AI may fall under **Annex III high-risk** categories. Full conformity assessment not yet completed.\r\n"
+      },
+      {
+        "name": "product_description_talentrank.md",
+        "text": "# TalentRank AI — Product Description\r\n\r\n**Vendor:** Norrin HR Tech  \r\n**Version:** 2.1 (pilot)\r\n\r\nTalentRank is an AI-powered recruitment platform that scores and ranks job applicants from uploaded CVs, cover letters, and structured screening questionnaires. The system produces a ranked shortlist for human recruiters.\r\n\r\n## Core capabilities\r\n\r\n- Parses CVs and extracts skills, experience, and education fields using a fine-tuned language model.\r\n- Computes a compatibility score against the job description and role requirements.\r\n- Ranks candidates from highest to lowest predicted fit.\r\n- Generates a one-page recruiter brief summarising strengths and gaps for each shortlisted applicant.\r\n\r\n## Intended users\r\n\r\nHR teams and hiring managers in mid-to-large enterprises running high-volume recruitment campaigns.\r\n\r\n## Deployment\r\n\r\nCloud SaaS. Customer HR systems push applicant data via API. Recruiters access the ranked shortlist in a web dashboard.\r\n"
+      }
+    ],
+    "must_see": [
+      "AI systems intended to be used for the recruitment or selection of natural persons"
+    ]
+  },
+  {
+    "name": "customer_chatbot",
+    "expected_risk_tier": "limited_risk",
+    "expected_gpai": "yes",
+    "should_ask_about": [
+      "transparency",
+      "GPAI use"
+    ],
+    "documents": [
+      {
+        "name": "chatbot_product_description.md",
+        "text": "# SupportBot — Customer Support Chatbot\r\n\r\n**Product:** SupportBot v3  \r\n**Owner:** Customer Experience team\r\n\r\nSupportBot is a **customer support chatbot** that interacts with end users on our website and mobile app. It answers FAQs, tracks orders, and escalates complex issues to human agents when confidence is low.\r\n\r\n## Interaction model\r\n\r\n- Users type natural-language questions in a chat widget.\r\n- The bot responds in real time with policy-compliant answers.\r\n- Conversational tone; supports English, German, and French.\r\n\r\n## Technology\r\n\r\n- Built on a **third-party large language model (LLM)** via API (OpenAI-compatible endpoint).\r\n- Retrieval layer over our knowledge base for factual answers.\r\n- Session logs stored for quality review.\r\n\r\n## Transparency\r\n\r\nA draft **transparency notice** states that users are chatting with an AI. Legal review pending on exact wording and placement.\r\n\r\n## Open items\r\n\r\n- Confirm GPAI provider obligations and whether Article 50 chatbot disclosure is sufficient.\r\n- Define human escalation SLA when the bot cannot resolve an issue.\r\n"
+      },
+      {
+        "name": "technical_overview.md",
+        "text": "# SupportBot — Technical Overview\r\n\r\n## Architecture\r\n\r\n```\r\nUser → Web chat widget → API gateway → LLM inference → Response\r\n                              ↓\r\n                        Knowledge base (RAG)\r\n```\r\n\r\n## LLM usage\r\n\r\n- Primary model: GPT-class **large language model** accessed through vendor API.\r\n- Temperature capped at 0.3 for factual support answers.\r\n- System prompt enforces brand tone and refusal of legal/medical advice.\r\n\r\n## Data handling\r\n\r\n- Chat transcripts retained 90 days for QA.\r\n- No training on customer messages (contractual prohibition with LLM vendor).\r\n\r\n## Monitoring\r\n\r\n- Weekly review of failed conversations and user satisfaction scores.\r\n- No dedicated human-in-the-loop during live chat unless user requests escalation.\r\n"
+      },
+      {
+        "name": "transparency_notice_draft.md",
+        "text": "# Draft Transparency Notice — SupportBot\r\n\r\n**For placement:** First message in chat widget\r\n\r\n---\r\n\r\nHello! You are interacting with an **AI-powered virtual assistant**. SupportBot uses automated systems to answer your questions. For complex issues, you can ask to speak with a human agent.\r\n\r\nThis notice is a draft and has not been approved by Legal.\r\n\r\n---\r\n\r\n## Review checklist\r\n\r\n- [ ] Meets Article 50 chatbot disclosure requirements\r\n- [ ] Available in all supported languages\r\n- [ ] Visible before first user message is sent\r\n"
+      }
+    ],
+    "must_see": [
+      "Providers shall ensure that AI systems intended to interact directly with natural persons"
+    ]
+  },
+  {
+    "name": "workplace_emotion_detection",
+    "expected_risk_tier": "prohibited",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "deployment context",
+      "what is inferred"
+    ],
+    "documents": [
+      {
+        "name": "technical_overview_emotion.md",
+        "text": "# MoodSense — Technical Overview (Procurement Pack)\r\n\r\n## Inference pipeline\r\n\r\n1. Capture video/audio stream from approved endpoints.\r\n2. Pre-process frames; detect faces.\r\n3. Run proprietary **affect classification model** (multi-class emotion labels).\r\n4. Aggregate scores over time windows; push to manager dashboard API.\r\n\r\n## Model outputs\r\n\r\n- Primary labels: happy, neutral, stressed, frustrated, disengaged.\r\n- Confidence score per inference.\r\n- No raw video stored after 24 hours (vendor claim).\r\n\r\n## Integration\r\n\r\n- SSO with corporate identity provider.\r\n- HRIS webhook for wellness programme enrolment triggers.\r\n\r\n## Open technical questions\r\n\r\n- Exact definition of \"emotion\" vs \"attention\" in model documentation.\r\n- Whether inference runs on-premise or in vendor cloud (EU region stated but not verified).\r\n"
+      },
+      {
+        "name": "vendor_pitch_moodsense.md",
+        "text": "# MoodSense Analytics — Vendor Pitch\r\n\r\n**Vendor:** EmotiLab Inc.\r\n\r\nMoodSense is a workplace analytics platform that infers **employee mood and emotional state** from webcam video and voice patterns during remote meetings and at desk checkpoints.\r\n\r\n## Value proposition\r\n\r\n- Real-time **emotion recognition** dashboards for team leads.\r\n- Alerts when aggregate team mood drops (burnout early warning).\r\n- Integration with HRIS for wellness programme targeting.\r\n\r\n## Signals analysed\r\n\r\n- Facial expression analysis (micro-expressions).\r\n- Voice tone and speech pace.\r\n- Optional self-reported mood check-ins (combined with inferred affect).\r\n\r\n## Deployment context\r\n\r\nDesigned for **workplace** and hybrid-office environments. Pilots running with three enterprise HR departments in the EU.\r\n\r\n## Compliance slide (vendor claim)\r\n\r\n\"GDPR-ready. Not medical diagnosis.\" — Legal review required before procurement.\r\n"
+      },
+      {
+        "name": "workplace_deployment_note.md",
+        "text": "# Workplace Deployment Note — MoodSense Pilot\r\n\r\n**Site:** Berlin HQ + remote engineering teams  \r\n**Sponsor:** Workplace Experience\r\n\r\n## Rollout plan\r\n\r\n- Phase 1: Opt-in pilot with 120 **employees** on voluntary basis.\r\n- Cameras analyse facial cues during stand-ups (with consent banner).\r\n- Managers receive weekly mood trend reports aggregated at team level.\r\n\r\n## What is inferred\r\n\r\nThe vendor documentation states the system infers **emotional states** such as stress, engagement, frustration, and positive affect. It does not claim to diagnose clinical conditions.\r\n\r\n## Employee concerns\r\n\r\nWorks council has asked whether this constitutes prohibited **emotion recognition in the workplace** under the EU AI Act. No legal opinion received yet.\r\n\r\n## Exceptions under discussion\r\n\r\n- Could safety-critical monitoring (e.g. lone-worker alert) qualify for an exception?\r\n- Medical use is not planned.\r\n"
+      }
+    ],
+    "must_see": [
+      "to infer emotions of a natural person in the areas of workplace and education institutions"
+    ]
+  },
+  {
+    "name": "spam_filter",
+    "expected_risk_tier": "minimal_risk",
+    "expected_gpai": "no",
+    "should_ask_about": [],
+    "documents": [
+      {
+        "name": "product_description_mailguard.md",
+        "text": "# MailGuard — Email Spam Filter\r\n\r\n**Product type:** Email security add-on  \r\n**Deployment:** On-premise gateway appliance\r\n\r\nMailGuard is an **email spam filter** that classifies incoming messages as spam, phishing, or legitimate mail. It protects corporate inboxes before messages reach user mail clients.\r\n\r\n## Function\r\n\r\n- Scans headers, body text, and attachment metadata.\r\n- Assigns a spam probability score using a trained ML classifier.\r\n- Quarantines messages above the configured threshold.\r\n- Users can mark quarantined messages as \"not spam\" to improve local tuning.\r\n\r\n## Impact on individuals\r\n\r\n- Narrow filtering task; does not evaluate individuals' legal rights or creditworthiness.\r\n- Misclassification may delay legitimate mail but does not determine legal rights or access to essential services.\r\n\r\n## Regulatory context\r\n\r\nInternal security team considers this **low-risk infrastructure** with no AI Act high-risk mapping identified to date.\r\n"
+      },
+      {
+        "name": "technical_overview_spam.md",
+        "text": "# MailGuard — Technical Overview\r\n\r\n## Classifier\r\n\r\n- Gradient-boosted model + heuristic rules.\r\n- Trained on labelled spam/ham corpus (no generative AI / **no LLM**).\r\n- Updates via weekly signature and model refresh from vendor.\r\n\r\n## Processing flow\r\n\r\n```\r\nSMTP inbound → MailGuard scan → score → quarantine or deliver\r\n```\r\n\r\n## Human oversight\r\n\r\n- Users retrieve false positives from quarantine folder.\r\n- Admin console allows threshold adjustment per domain.\r\n\r\n## Good practice\r\n\r\n- Monitor false-positive rate.\r\n- Log quarantine decisions for audit.\r\n- No personal profiling beyond message metadata.\r\n"
+      }
+    ],
+    "must_see": [
+      "means a machine-based system that is designed to operate with varying levels of autonomy"
+    ]
+  },
+  {
+    "name": "llm_report_generator",
+    "expected_risk_tier": null,
+    "expected_gpai": "yes",
+    "should_ask_about": [
+      "provider compliance",
+      "human review"
+    ],
+    "documents": [
+      {
+        "name": "internal_policy_gpai.md",
+        "text": "# Internal Policy — Use of Third-Party LLM Tools\r\n\r\n**Applies to:** InsightWriter and similar internal tools  \r\n**Owner:** IT Governance\r\n\r\n## Rules\r\n\r\n1. Only approved GPAI providers may be used for production workloads.\r\n2. Deployers must obtain and retain **provider compliance documentation** (model cards, prohibited use policies).\r\n3. All **LLM-generated** outputs require human review before operational use.\r\n4. Sensitive personal data must not be sent to external APIs without DPO approval.\r\n\r\n## Roles\r\n\r\n| Role | Responsibility |\r\n|------|----------------|\r\n| GPAI provider | Foundation model, Article 53 obligations |\r\n| Our organisation (deployer) | Prompt design, data selection, human review, appropriate use |\r\n\r\n## Open actions\r\n\r\n- Collect signed Article 53 package from OpenAI-compatible vendor.\r\n- Document review workflow and escalation when analyst rejects draft.\r\n- Assess whether downstream HR use of reports triggers high-risk obligations.\r\n"
+      },
+      {
+        "name": "product_brief_insightwriter.md",
+        "text": "# InsightWriter — Internal Report Generator (Product Brief)\r\n\r\n**Team:** Business Intelligence  \r\n**Status:** Internal beta\r\n\r\nInsightWriter is an internal tool that uses a **third-party GPT API** to generate narrative business reports from structured sales and operations data.\r\n\r\n## Workflow\r\n\r\n1. Analyst selects data sources and report template (weekly sales, pipeline review).\r\n2. Tool sends structured JSON summaries to the **large language model** via API.\r\n3. **LLM** returns a draft report in natural language.\r\n4. Analyst reviews and edits before distribution to leadership.\r\n\r\n## GPAI dependency\r\n\r\n- Model: commercial GPT-class API (provider hosts foundation model).\r\n- Our organisation acts as **deployer** — we define prompts, data inputs, and review outputs.\r\n- No fine-tuning on proprietary data in current beta.\r\n\r\n## Use cases\r\n\r\n- Internal management reporting only (not customer-facing).\r\n- Reports may inform staffing decisions but are not sole basis for HR actions.\r\n\r\n## Compliance gaps\r\n\r\n- Article 53 provider documentation not yet collected from vendor.\r\n- Labelling of AI-generated report sections not implemented.\r\n"
+      }
+    ],
+    "must_see": [
+      "public authority, agency or other body using an AI system under its authority except where"
+    ]
+  },
+  {
+    "name": "predictive_maintenance",
+    "expected_risk_tier": "minimal_risk",
+    "expected_gpai": "no",
+    "should_ask_about": [
+      "safety component",
+      "deployment context"
+    ],
+    "documents": [
+      {
+        "name": "technical_overview.md",
+        "text": "# Industrial predictive maintenance — demo case for citation correctness tests\r\n\r\n## System overview\r\n\r\n**Product name:** MachineGuard PM  \r\n**Vendor:** Norrin Industrial Analytics GmbH\r\n\r\n## Purpose\r\n\r\nMachineGuard PM monitors vibration and temperature sensors on factory machinery (pumps, compressors, conveyor motors). A custom **LSTM neural network** trained on historical sensor logs predicts component failures 48–72 hours before they occur.\r\n\r\nMaintenance technicians receive alerts in a dashboard. They schedule inspections manually — the system does **not** autonomously shut down equipment or make hiring, credit, or safety-critical product decisions.\r\n\r\n## Technical architecture\r\n\r\n- **Model:** Proprietary LSTM (PyTorch), trained in-house on client sensor data\r\n- **Not a foundation model** — no third-party LLM or GPAI component\r\n- **Inputs:** IoT sensor streams (vibration, temperature, RPM)\r\n- **Outputs:** Failure probability score and recommended inspection window\r\n- **Deployment:** On-premise edge server at the factory; no cloud inference for production alerts\r\n\r\n## Who uses the system\r\n\r\n- **Maintenance technicians** who act on alerts\r\n- **No direct impact on job applicants or end consumers**\r\n- No profiling of individuals\r\n\r\n## Sector\r\n\r\nIndustrial manufacturing / predictive maintenance\r\n\r\n## Human oversight\r\n\r\nTechnicians review every alert before scheduling maintenance. The model does not control machinery directly.\r\n\r\n## What this system is NOT\r\n\r\n- Not used for HR or personnel evaluation workflows\r\n- Not integrated as a safety component of a regulated product (e.g. medical device, automotive ECU)\r\n- Not a general-purpose AI model or chatbot\r\n\r\n## Open questions\r\n\r\n- Whether the AI is embedded as a **safety component** under Article 6(1) is **unclear** from current documentation\r\n- Deployment geography and scale are not specified\r\n"
+      }
+    ],
+    "must_see": [
+      "intended to be used as a safety component of a product"
+    ]
+  },
+  {
+    "name": "exam_proctoring",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "accuracy and bias",
+      "contesting flags",
+      "human review"
+    ],
+    "documents": [
+      {
+        "name": "proctorwatch_overview.md",
+        "text": "# ProctorWatch — Remote Exam Monitoring\n\nProctorWatch is sold to universities for online exams. During a test it analyses the student's webcam video, screen activity and keystrokes with a neural network trained on labelled recordings of past exams. The model flags behaviour it predicts to be cheating, such as a second person in the room or switching to a browser tab.\n\nFlags are sent to the exam board, which decides whether to open a misconduct procedure. We (EduSecure GmbH) develop the model and sell the product under our own brand.\n\nNot yet documented: accuracy per demographic group, how students can contest a flag."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "must_see": [
+      "monitoring and detecting prohibited behaviour of students during tests"
+    ]
+  },
+  {
+    "name": "university_admissions",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "bias in training data",
+      "informing applicants",
+      "human oversight"
+    ],
+    "documents": [
+      {
+        "name": "admissions_policy.md",
+        "text": "# Admissions Ranking Pilot — Northfield University\n\nFrom next year, the admissions office will use a machine-learning model supplied by a vendor to score applicants to the master's programmes. The model was trained on ten years of past admission decisions and grades. Applicants below a score of 40 are not reviewed by the committee; the rest are reviewed in score order.\n\nThe university configures the score threshold. The vendor provides the model and its documentation.\n\nOpen points: whether rejected applicants are told a model was used; how historical bias in past decisions is handled."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "must_see": [
+      "to determine access or admission or to assign natural persons to educational and vocational training institutions"
+    ]
+  },
+  {
+    "name": "consumer_credit_scoring",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "automated decisions",
+      "postcode as proxy",
+      "explanations to applicants"
+    ],
+    "documents": [
+      {
+        "name": "creditscore_model_card.md",
+        "text": "# Model card — RetailCredit Score v3\n\nPurpose: estimate the probability that a private customer defaults on a consumer loan, to approve or decline loan applications and set the interest rate.\n\nTechnique: gradient-boosted trees trained on 1.2 million historical loans (income, repayment history, employment status, postcode).\n\nUse: applications scoring below 0.35 are declined automatically; others go to a loan officer. The bank developed the model in-house and uses it in its own lending."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "both",
+    "must_see": [
+      "to evaluate the creditworthiness of natural persons or establish their credit score"
+    ]
+  },
+  {
+    "name": "life_insurance_pricing",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "fairness of premiums",
+      "health data",
+      "underwriter override",
+      "provider/deployer role"
+    ],
+    "documents": [
+      {
+        "name": "pricing_engine_note.md",
+        "text": "# Pricing engine note — VitaLife Insurance\n\nOur underwriting team uses a machine-learning model to set individual premiums for new life and health insurance policies. The model predicts expected claims from the applicant's age, medical questionnaire, BMI and wearable-activity data shared with consent.\n\nUnderwriters see the suggested premium and may adjust it within ±10%. The model was built by an external analytics firm under contract and is deployed by us."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "must_see": [
+      "risk assessment and pricing in relation to natural persons in the case of life and health insurance"
+    ]
+  },
+  {
+    "name": "retail_face_matching",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "legal basis for biometric data",
+      "retention",
+      "informing people"
+    ],
+    "documents": [
+      {
+        "name": "storeguard_deployment.md",
+        "text": "# StoreGuard deployment — CityMart supermarkets\n\nCityMart will install StoreGuard cameras at store entrances. The system compares the faces of everyone entering against a watchlist of people previously caught shoplifting, at a distance and without their involvement, and alerts security staff to a match.\n\nStoreGuard is a commercial product; CityMart is the operator. The watchlist is maintained by CityMart security. No police involvement.\n\nUnclear: legal basis for processing biometric data, how long images are kept, how people are informed."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "must_see": [
+      "This shall not include AI systems intended to be used for biometric verification the sole purpose of which is to confirm"
+    ]
+  },
+  {
+    "name": "deepfake_marketing",
+    "expected_risk_tier": "limited_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "labelling AI-generated content",
+      "consent of the real person"
+    ],
+    "documents": [
+      {
+        "name": "campaign_brief.md",
+        "text": "# Campaign brief — \"Meet Ava\"\n\nOur agency produces video adverts for clients featuring \"Ava\", a realistic presenter who does not exist. Ava's face and voice are generated with a third-party text-to-video and voice-cloning service; our staff write the script and edit the result. For one client we will also generate a video in which a real, retired athlete appears to endorse the product, with his written permission.\n\nVideos run on social media and TV. We have not decided how to label them."
+      }
+    ],
+    "expected_role": "deployer",
+    "must_see": [
+      "constituting a deep fake, shall disclose that the content has been artificially generated or manipulated"
+    ]
+  },
+  {
+    "name": "medical_imaging_triage",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "clinical validation",
+      "radiologist oversight"
+    ],
+    "documents": [
+      {
+        "name": "lungscan_ai_summary.md",
+        "text": "# LungScan AI — Product summary\n\nLungScan AI is software that analyses chest CT scans and marks suspected lung nodules for radiologists, prioritising scans with a high predicted malignancy score in the reading list. It uses a convolutional neural network trained on annotated scans.\n\nLungScan AI is CE-marked as a class IIa medical device under Regulation (EU) 2017/745; the conformity assessment involved a notified body. We are the manufacturer."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "must_see": [
+      "is required to undergo a third-party conformity assessment"
+    ]
+  },
+  {
+    "name": "invoice_rules_engine",
+    "expected_risk_tier": null,
+    "expected_gpai": "no",
+    "should_ask_about": [
+      "confirm no learning components"
+    ],
+    "documents": [
+      {
+        "name": "approval_workflow_spec.md",
+        "text": "# Invoice approval workflow — technical specification\n\nThe workflow tool routes supplier invoices for approval using fixed rules written by the finance team:\n- invoices under EUR 1,000 from approved suppliers are approved automatically;\n- invoices from new suppliers go to the procurement lead;\n- amounts over EUR 50,000 need CFO sign-off.\n\nThe rules are stored in a configuration table and edited manually. The tool does not learn from data, use statistical models or make predictions; it only executes the rules as written."
+      }
+    ],
+    "expected_ai_system": "no",
+    "must_see": [
+      "means a machine-based system that is designed to operate with varying levels of autonomy"
+    ]
+  },
+  {
+    "name": "municipal_social_scoring",
+    "expected_risk_tier": "prohibited",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "legal basis",
+      "unrelated contexts of the data"
+    ],
+    "documents": [
+      {
+        "name": "citizen_points_plan.md",
+        "text": "# Civic Points programme — draft plan, Municipality of Lerwick-on-Sea\n\nThe municipality plans an AI system that scores residents over time from their payment of local fees, library fines, noise complaints filed against them, and social-media posts about the town. Residents with low scores would wait longer for social housing, lose eligibility for public childcare places and face extra checks on benefit applications.\n\nThe system would be procured from a software company and run by the municipality's social services department."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "must_see": [
+      "the evaluation or classification of natural persons or groups of persons over a certain period of time based on their social behaviour"
+    ]
+  },
+  {
+    "name": "smart_toy_challenges",
+    "expected_risk_tier": "prohibited",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "child safety",
+      "exploitation of age"
+    ],
+    "documents": [
+      {
+        "name": "buddybot_design_doc.md",
+        "text": "# BuddyBot — design doc (confidential)\n\nBuddyBot is a talking plush toy for children aged 4–9, with a speech model that chats with the child. To increase engagement, the dialogue policy rewards conversations in which the child accepts \"dares\", including climbing furniture, hiding from parents and trying household products. The more dares accepted, the more in-app rewards the parents are prompted to buy.\n\nWe design and sell BuddyBot under our own brand across the EU."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "must_see": [
+      "exploits any of the vulnerabilities of a natural person or a specific group of persons due to their age"
+    ]
+  },
+  {
+    "name": "predictive_policing_profiles",
+    "expected_risk_tier": "prohibited",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "objective facts",
+      "human assessment"
+    ],
+    "documents": [
+      {
+        "name": "riskradar_proposal.md",
+        "text": "# RiskRadar — proposal to the regional police\n\nRiskRadar assigns each resident a \"likelihood of committing a violent offence\" score, computed solely from a personality profile inferred from social-media activity, family background and neighbourhood. Officers would use high scores to decide whom to stop and search. The model does not use any information about crimes the person has actually been involved in.\n\nThe police would deploy the system; our company develops it."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "must_see": [
+      "to assess or predict the risk of a natural person committing a criminal offence, based solely on the profiling of a natural person"
+    ]
+  },
+  {
+    "name": "emergency_call_triage",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "automation bias",
+      "performance monitoring",
+      "human oversight"
+    ],
+    "documents": [
+      {
+        "name": "dispatch_ai_note.md",
+        "text": "# Dispatch assistant — Regional Emergency Centre\n\nThe emergency centre uses an AI model that listens to 112 calls, transcribes them and assigns a priority level (1–4) that decides the order in which ambulances are dispatched. Dispatchers can change the priority, but in practice they accept it in 95% of calls because of workload.\n\nThe model is a vendor product; the centre deploys it. Performance audits have not been done since installation."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "must_see": [
+      "to evaluate and classify emergency calls by natural persons"
+    ]
+  },
+  {
+    "name": "gig_task_allocation",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "automated deactivation",
+      "transparency to couriers",
+      "worker representatives"
+    ],
+    "documents": [
+      {
+        "name": "courier_platform_ops.md",
+        "text": "# Courier platform — operations overview\n\nOur delivery platform uses a machine-learning system to allocate delivery jobs to self-employed couriers based on predicted speed, acceptance rate and customer ratings. Couriers whose predicted reliability falls below a threshold receive fewer jobs, and after four weeks below it their account is deactivated automatically.\n\nWe develop and operate the system ourselves. Couriers are not told how the reliability score is calculated."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "both",
+    "must_see": [
+      "to allocate tasks based on individual behaviour or personal traits or characteristics"
+    ]
+  },
+  {
+    "name": "customer_call_emotion",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": null,
+    "should_ask_about": [
+      "informing customers",
+      "biometric data"
+    ],
+    "documents": [
+      {
+        "name": "voicepulse_datasheet.md",
+        "text": "# VoicePulse — datasheet\n\nVoicePulse analyses the voice of customers calling a service hotline and infers their emotional state (anger, anxiety, calm) in real time from pitch, tempo and wording, using a model trained on labelled call audio. Calls from customers inferred to be angry are routed to senior agents.\n\nVoicePulse is licensed from its developer, SoundMetrics Ltd. We are a telecom company deploying it for our own hotline; the analysis concerns customers, not our employees. Customers are currently not told about the emotion analysis."
+      }
+    ],
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "must_see": [
+      "AI systems intended to be used for emotion recognition"
+    ]
+  }
+]
