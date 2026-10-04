@@ -20,7 +20,7 @@ from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
 from src.ingest import case_passages
 
 MAX_SEARCH_ROUNDS = 6
-MAX_CASE_CHARS = 100_000
+MAX_CASE_CHARS = 500_000
 LLM_TIMEOUT_S = 120  # per call; the SDK default is 600
 
 

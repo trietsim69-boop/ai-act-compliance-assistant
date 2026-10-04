@@ -48,7 +48,7 @@ uvicorn api.index:app --reload                     # UI at http://localhost:8000
 python -m src.agents path/to/case.pdf other.docx   # or: print the JSON result for files
 ```
 
-**API:** `POST /api/assess` (multipart `files[]` and/or `description`, header `x-access-code` when `ACCESS_CODE` is set) returns the raw result plus `report`. Errors: 401 access code, 413 uploads over 4 MB, 422 no readable input or over 100,000 characters, 502 the model failed (safe to retry).
+**API:** `POST /api/assess` (multipart `files[]` and/or `description`, header `x-access-code` when `ACCESS_CODE` is set) returns the raw result plus `report`. Errors: 401 access code, 413 uploads over 4 MB, 422 no readable input or over 500,000 characters, 502 the model failed (safe to retry).
 
 **UI:** React + Vite in `web/`; `npm run build` rewrites `public/index.html`, one self-contained file. See [web/README.md](web/README.md).
 
