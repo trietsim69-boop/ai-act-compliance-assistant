@@ -1,6 +1,6 @@
 """Run the live pipeline on evals/cases.json and compare with expectations. Needs DEEPSEEK_API_KEY (costs credit).
 
-    python -m evals.cases [case_name ...]
+    python -m evals.cases [--tree] [case_name ...]   # --tree: the decision-tree pipeline instead of the free Assessor
 
 Besides tier / GPAI / AI system / role, it measures retrieval as the Assessor actually uses it: `saw` is how many of a
 case's `must_see` provisions appeared in any search_law result during the run. Every query the Assessor wrote is
@@ -17,7 +17,7 @@ import time
 from pathlib import Path
 
 import src.agents as agents
-from src import law
+from src import law, rules
 from src.config import ROOT
 from src.ingest import case_passages
 
@@ -56,6 +56,10 @@ PRICE = {"prompt_cache_hit_tokens": 0.006, "prompt_cache_miss_tokens": 0.3, "com
 
 
 def main(names: list[str]) -> int:
+    tree = "--tree" in names
+    names = [n for n in names if n != "--tree"]
+    assess = agents.assess_case_tree if tree else agents.assess_case
+    print(f"pipeline: {'decision tree' if tree else 'free Assessor'}, model {agents.LLM_MODEL}")
     calls, searches, usage = [], [], []
     chat, search = agents.chat, law.search
     agents.chat = lambda *args, **kwargs: calls.append(1) or chat(*args, **kwargs)
@@ -85,7 +89,7 @@ def main(names: list[str]) -> int:
         usage.clear()
         started = time.monotonic()
         try:
-            result = agents.assess_case(case_passages(docs)[0])
+            result = assess(case_passages(docs)[0])
         except Exception as error:  # report and keep going: one broken case must not hide the others
             failures += 1
             print(f"{case['name']:30} ERROR {type(error).__name__}: {str(error)[:120]} ({time.monotonic() - started:.0f}s)")
@@ -93,6 +97,8 @@ def main(names: list[str]) -> int:
         a = result["assessment"]
         supported = sum(v["status"] == "supported" for v in result["verdicts"])
         shown = [t for s in searches for t in s["texts"]]
+        if tree:  # no searches: the model is shown the questions' legal tests and the obligations' provisions
+            shown = [_flat(rules.render())] + [_flat(p["text"]) for p in result["sources"].values()]
         must = case.get("must_see", [])
         seen = sum(any(_flat(q) in t for t in shown) for q in must)
         seen_total, must_total = seen_total + seen, must_total + len(must)

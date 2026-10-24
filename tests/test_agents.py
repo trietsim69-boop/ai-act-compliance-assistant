@@ -100,7 +100,7 @@ def answer(q, a="yes", quote=QUOTE):
 
 
 def test_questionnaire_keeps_verified_answers_without_search(monkeypatch):
-    chat, calls = questionnaire_llm([answer("A1"), answer("B2"), answer("G1", "not_mentioned"), answer("ZZ")])
+    chat, calls = questionnaire_llm([answer("A1: Does the system infer"), answer("B2"), answer("G1", "not_mentioned"), answer("ZZ")])
     monkeypatch.setattr(agents, "chat", chat)
     out = agents.answer_questions(CASE, {c["id"]: c for c in CASE})
     assert out["answers"] == {"A1": "yes", "B2": "yes", "G1": "not_mentioned"}  # unknown id ZZ ignored
