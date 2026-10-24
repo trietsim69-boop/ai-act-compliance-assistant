@@ -92,9 +92,9 @@ Record the source URL and licence for each case in `cases.json`.
 - `path`: each step's question id, answer and article;
 - `could_be`, `open_questions` (on-path only), `confidence`.
 **Acceptance criteria:**
-- [ ] About 20 table tests: every tier path, Art 6(3) with and without profiling, `not_mentioned` on a gating fact (tier `unclear`), `not_mentioned` that could only raise the tier (sets `could_be`), and an off-path `not_mentioned` (no question).
-- [ ] No I/O and no LLM import in `rules.py`.
-- [ ] A3 (EU link) `not_mentioned` counts as in scope plus an open question, not `unclear`: most cases never state their location. Only an explicit non-EU answer gives `out_of_scope`.
+- [x] About 20 table tests: every tier path, Art 6(3) with and without profiling, `not_mentioned` on a gating fact (tier `unclear`), `not_mentioned` that could only raise the tier (sets `could_be`), and an off-path `not_mentioned` (no question).
+- [x] `classify()` does no I/O and calls no LLM (`legal_test`/`render` read the corpus; `classify` never does). Done 2026-10-24 (`dbbf0ef`): 23 table cases + 10 behaviour tests; unknowns below the final tier are never asked.
+- [x] A3 (EU link) `not_mentioned` counts as in scope plus an open question, not `unclear`: most cases never state their location. Only an explicit non-EU answer gives `out_of_scope`.
 **Verification:** `pytest` on `testing`.
 **Dependencies:** Task 6. **Files:** `src/rules.py`, `tests/test_rules.py`. **Scope:** M
 
