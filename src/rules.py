@@ -30,8 +30,7 @@ QUESTIONS = [
       "without learning, reasoning or modelling?", "guidelines_ai_system_definition/s-5.2",
       "Basic data processing system refers to a system that follows predefined, explicit instructions or operations"),
     Q("A3", "A", "Is the system placed on the market or put into service in the EU, used by a business located in the EU, "
-      "or is its output used in the EU?", ACT + "2", "where the output produced by the AI system is used in the Union",
-      gating=True),
+      "or is its output used in the EU?", ACT + "2", "where the output produced by the AI system is used in the Union"),
     Q("A4", "A", "Is it used exclusively for military, defence or national security purposes?", ACT + "2",
       "used with or without modification exclusively for military, defence or national security purposes"),
     Q("A5", "A", "Is it developed and put into service for the sole purpose of scientific research and development?",
@@ -197,6 +196,106 @@ QUESTIONS = [
       "shall be classified as a general-purpose AI model with systemic risk if it meets any of the following conditions"),
 ]
 BY_ID = {q.id: q for q in QUESTIONS}
+
+
+TIERS = ["minimal_risk", "limited_risk", "high_risk", "prohibited"]  # ascending severity
+_ART5 = [("C1", None), ("C2", None), ("C3", None), ("C4", None), ("C5", None), ("C6", "C7"), ("C8", None),
+         ("C9", "C10"), ("C11", "C12"), ("C13", "C14")]  # (practice, its exception)
+_EXCLUSIONS = ["A4", "A5", "A6", "A7"]  # Art 2(3), 2(6), 2(8), 2(10)
+
+
+def classify(answers: dict[str, str]) -> dict:
+    """Apply the Act to the answers ("yes" / "no" / "not_mentioned"; missing = not_mentioned). Pure.
+
+    The tier is the most severe confirmed one. An unknown answer that could raise it sets `could_be` and becomes an
+    open question; an unknown exception never lowers the tier (fail closed); unknown gating facts make it unclear.
+    """
+    path, open_questions, pending = [], [], []
+
+    def ask(qid: str) -> str:
+        a = answers.get(qid, "not_mentioned")
+        path.append({"question": qid, "answer": a, "ref": BY_ID[qid].ref})
+        if a == "not_mentioned" and qid not in open_questions:
+            open_questions.append(qid)
+        return a
+
+    def unknown(qid: str, tier: str) -> None:  # unanswered; would lead to `tier`, asked only if above the final tier
+        if answers.get(qid, "not_mentioned") == "not_mentioned":
+            pending.append((qid, tier))
+
+    def decision(tier: str, ai_system: str = "yes", exception: bool = False) -> dict:
+        higher = [(q, t) for q, t in pending if tier in TIERS and TIERS.index(t) > TIERS.index(tier)]
+        for q, _ in higher:
+            ask(q)
+        could_be = max((t for _, t in higher), key=TIERS.index, default=None)
+        role = _role(answers, tier, ask if tier != "out_of_scope" else answers.get)
+        gpai = {"yes": "yes", "no": "no"}.get(answers.get("H1"), "unclear")
+        confidence = "low" if tier == "unclear" or could_be else "medium" if open_questions else "high"
+        return {"ai_system": ai_system, "risk_tier": tier, "role": role, "gpai_involved": gpai, "confidence": confidence,
+                "could_be": could_be, "annex_iii_exception": exception, "path": path, "open_questions": open_questions,
+                "transparency": [q for q in ("G1", "G2", "G3", "G4", "G5") if answers.get(q) == "yes"]}
+
+    # 1. AI system (Art 3(1), guidelines) and scope (Art 2)
+    a1, a2 = ask("A1"), answers.get("A2", "not_mentioned")
+    if a1 == "no" or a2 == "yes":
+        if a2 == "yes":
+            ask("A2")
+        return decision("out_of_scope", ai_system="no")
+    if a1 == "not_mentioned":
+        return decision("unclear", ai_system="unclear")
+    if ask("A3") == "no" or any(answers.get(q) == "yes" and ask(q) for q in _EXCLUSIONS):
+        return decision("out_of_scope")
+
+    # 2. Prohibited practices (Art 5): an unknown exception keeps the prohibition
+    for practice, exception in _ART5:
+        if answers.get(practice) == "yes":
+            ask(practice)
+            if exception is None or ask(exception) != "yes":
+                return decision("prohibited")
+    for practice, _ in _ART5:
+        unknown(practice, "prohibited")
+
+    # 3. High-risk via Annex I (Art 6(1), 6(1a)-(1b))
+    d = {q: answers.get(q, "not_mentioned") for q in ("D1", "D2", "D3")}
+    if d["D1"] == "yes" and d["D3"] != "yes":
+        ask("D1")
+        if d["D2"] == "yes":
+            ask("D2")
+            return decision("high_risk")
+        unknown("D2", "high_risk")
+    else:
+        unknown("D1", "high_risk")
+
+    # 4. High-risk via Annex III (Art 6(2)), unless an Art 6(3) condition holds and there is no profiling (Art 6(3)-(4))
+    listed = [q.id for q in QUESTIONS if q.group == "E" and answers.get(q.id) == "yes"]
+    if listed:
+        for qid in listed:
+            ask(qid)
+        conditions = [q for q in ("F1", "F2", "F3", "F4") if answers.get(q) == "yes"]
+        if not conditions or ask("F5") != "no":  # unknown profiling keeps it high-risk
+            return decision("high_risk")
+        for q in conditions:
+            ask(q)
+        exception = True
+    else:
+        exception = False
+        for q in QUESTIONS:
+            if q.group == "E":
+                unknown(q.id, "high_risk")
+
+    # 5. Transparency (Art 50), then minimal; open-source systems below that are excluded (Art 2(12))
+    tier = "limited_risk" if any(answers.get(q) == "yes" and ask(q) for q in ("G1", "G2", "G3", "G4", "G5")) else "minimal_risk"
+    if tier == "minimal_risk" and answers.get("A8") == "yes":
+        ask("A8")
+        return decision("out_of_scope")
+    return decision(tier, exception=exception)
+
+
+def _role(answers: dict[str, str], tier: str, ask) -> str:
+    """Provider (Art 3(3), or Art 25(1) for high-risk systems), deployer (Art 3(4)), both, or unclear."""
+    provider = ask("B1") == "yes" or (tier == "high_risk" and any(answers.get(q) == "yes" and ask(q) for q in ("B3", "B4", "B5")))
+    deployer = ask("B2") == "yes"
+    return "both" if provider and deployer else "provider" if provider else "deployer" if deployer else "unclear"
 
 
 def legal_test(q: Question) -> dict:
