@@ -116,22 +116,22 @@ Record the source URL and licence for each case in `cases.json`.
 ### Task 9: Questionnaire call
 **Description:** `answer_questions(case)` in `src/agents.py`: a prompt plus the `Answers` schema (`yes` / `no` / `not_mentioned` with quotes, plus `other_concerns`). Case documents come first in the message for DeepSeek's prefix cache. Each yes/no answer becomes a `fact` Claim, so `check_references` and `verify` are reused unchanged. Failures on the decision path get one revision; anything still failing becomes `not_mentioned`.
 **Acceptance criteria:**
-- [ ] A fake `chat` (monkeypatch) covers: verbatim answers kept; a bad quote dropped to `not_mentioned`; one revision only for on-path failures.
-- [ ] No `search_law` tool is offered in this call.
+- [x] A fake `chat` (monkeypatch) covers: verbatim answers kept; a bad quote dropped to `not_mentioned`; one revision only for on-path failures.
+- [x] No `search_law` tool is offered in this call. Done 2026-10-24 (`9f2d8b2`, fix `answer ids` after the live smoke).
 **Verification:** `pytest` on `testing`; live on 3 cases through `evals.cases` (Task 11).
 **Dependencies:** Task 7. **Files:** `src/agents.py`, `tests/test_agents.py`. **Scope:** M
 
 ### Task 10: Status and prose call; `assess_case_tree`
 **Description:** `assess_case_tree(case)`: questionnaire → `classify` → `obligations` → call ② (status per listed obligation with case quotes, summary, reasoning) → Verifier on the status quotes. It returns today's result shape plus `decision`. Legal claims come from the templates and are checked by `check_references`, not the Verifier. `build_report` copies `decision` through when present (additive key).
 **Acceptance criteria:**
-- [ ] `build_report(tree_result)` returns today's keys plus `decision`, and `build_report(old_result)` is unchanged (test).
-- [ ] Call ② cannot add or drop obligations: unknown ids are ignored and missing ones become `unclear`.
+- [x] `build_report(tree_result)` returns today's keys plus `decision`, and `build_report(old_result)` is unchanged (test).
+- [x] Call ② cannot add or drop obligations: unknown ids are ignored and missing ones become `unclear`; an unproven "met" becomes `unclear`. Done 2026-10-24.
 **Verification:** `pytest` on `testing`.
 **Dependencies:** Tasks 8, 9. **Files:** `src/agents.py`, `src/report.py`, `tests/test_agents.py`, `tests/test_report.py`. **Scope:** M
 
 ### Task 11: `evals.cases --tree`
 **Description:** A flag that runs `assess_case_tree` instead of `assess_case` and scores it with the same metrics. `saw` is replaced by "passages served" for the tree pipeline.
-**Acceptance criteria:** [ ] All 32 cases run without a schema error on `deepseek-flash`.
+**Acceptance criteria:** [x] `--tree` flag done; 3-case live smoke runs without schema errors (see plan.md). The full 33-case run is Task 12 (your one-final-run decision).
 **Verification:** a live run (estimate $1–3).
 **Dependencies:** Task 10. **Files:** `evals/cases.py`. **Scope:** XS
 

@@ -107,3 +107,15 @@ Rerun with PR 1 settings (`deepseek-flash`, `thinking: disabled` = what the reti
 - Thinking on made both cases 3–7× slower, dearer, and the DUO case wrong. Keep it off; testing it on is a separate question.
 - With thinking off the 192k-char case takes 67 s, well inside 300 s.
 - Cost: ~$0.05 per short case at peak, half off-peak. A full Task 12 run of both pipelines on 33 cases is roughly $2–4 at peak; run it off-peak (outside 01–04 and 06–10 UTC on weekdays).
+
+## Task 11 smoke test (2026-10-24, tree pipeline, `deepseek-flash`, thinking off)
+First run: every answer unmatched (the model echoed "A1: <question text>" as the id) → fixed in `Answer` (`id_only`) and the prompt.
+
+| Case | Result | Time | Calls | Tokens hit / miss / out | Cost (peak) | Old pipeline (Task 4 rerun) |
+|---|---|---|---|---|---|---|
+| hr_screening | PASS, obl 3/3, supported 52/52 | 33 s | 4 | 1k / 22k / 8k | $0.017 | PASS, 68 s, $0.045 |
+| cv_parser_procedural | FAIL gpai (unclear vs gold no); tier minimal right; obl 1/3 | 31 s | 5 | 17k / 24k / 8k | $0.017 | not run |
+| duo_student_finance_profile | PASS, not an AI system, supported 39/39 | 36 s | 2 | 60k / 50k / 9k | $0.026 | PASS, 67 s, $0.083 |
+
+- About half the time and a third of the cost of the old pipeline, with no search rounds.
+- Watch in Task 12: cv_parser obl 1/3 means the Art 6(4)/49(2) rows were not listed, so the model probably answered Annex III 4(a) "no" (CV parsing as "analysing applications"), reaching minimal risk without the exception. GPAI `unclear` when the documents name a specific trained model and never mention a general-purpose one.
