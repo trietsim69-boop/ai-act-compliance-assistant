@@ -119,3 +119,17 @@ First run: every answer unmatched (the model echoed "A1: <question text>" as the
 
 - About half the time and a third of the cost of the old pipeline, with no search rounds.
 - Watch in Task 12: cv_parser obl 1/3 means the Art 6(4)/49(2) rows were not listed, so the model probably answered Annex III 4(a) "no" (CV parsing as "analysing applications"), reaching minimal risk without the exception. GPAI `unclear` when the documents name a specific trained model and never mention a general-purpose one.
+
+## Task 12, part 1: tree pipeline, all 33 cases (2026-10-24, Saturday off-peak, `deepseek-flash`, thinking off)
+23/33 pass; obligations covered 124/143 (86.7%); 1 gap/unclear marked met; 14 min in total, slowest case 39 s; $0.49 at peak rates (≈ $0.25 billed off-peak). Failed checks: gpai 8, tier 4, ai_system 3, role 2.
+
+| Cause | Cases | Effect |
+|---|---|---|
+| A1 (AI system) fails verification → gating → whole case unclear | smart_toy_challenges, university_emotion_research, white_label_hiring | tier, ai_system, role wrong; 14 obligations lost |
+| GPAI `unclear` vs gold `no` (documents name a custom model, never a GPAI one) | 8 (sole failure in 5) | gold vs question wording |
+| A3 answered yes (hosted in AWS Ireland) | govuk_chat_record | limited_risk vs gold out_of_scope (contestable) |
+| B6 public body not recognised | welfare_fraud_risk_score | misses 27, 49.3 |
+| Provider not recognised for an in-house chatbot on a third-party LLM | customer_chatbot | misses 50(1) |
+| False met | amsterdam_slimme_check | likely Art 4 met (staff training documented): gold may be wrong |
+
+Bar so far: long cases < 300 s ✓, cost ✓; obligation recall 86.7% < 90%, false met 1 > 0; accuracy vs old pending (old run 2026-10-25).
