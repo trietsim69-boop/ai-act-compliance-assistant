@@ -1237,7 +1237,7 @@
   },
   {
     "name": "govuk_chat_record",
-    "expected_risk_tier": "out_of_scope",
+    "expected_risk_tier": "limited_risk",
     "expected_gpai": "yes",
     "expected_ai_system": "yes",
     "expected_role": "both",
@@ -1245,8 +1245,17 @@
     "must_see": [
       "where the output produced by the AI system is used in the Union"
     ],
-    "expected_obligations": [],
-    "note": "UK government chatbot for UK users: Art 2(1) territorial scope; hosting in AWS Ireland is processing, not use of the output in the Union (contestable). Built in-house on Claude Sonnet 4; Art 50(1) would apply in the EU.",
+    "expected_obligations": [
+      {
+        "article": "50",
+        "status": "any"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Decided 2026-10-24: the EU link counts (hosted in AWS Ireland), so in scope; Art 50(1) chatbot built in-house (provider), on Claude Sonnet 4 (downstream GPAI user).",
     "sources": [
       {
         "url": "https://www.gov.uk/algorithmic-transparency-records/dsit-gov-dot-uk-chat",
