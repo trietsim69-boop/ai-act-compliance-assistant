@@ -116,8 +116,8 @@ QUESTIONS_TASK = """## Task: answer every question
 
 Answer each question below about the AI system in the case documents. Its legal test decides what counts.
 - "yes": the documents show it. Quote the passage that shows it.
-- "no": the documents rule it out. Quote what the system does instead (for example its stated purpose or users), so that the quote excludes the question.
-- "not_mentioned": the documents do not let you decide. No references.
+- "no": nothing in the documents indicates it, given what they say the system is and does. Quote that description (its purpose, functions or users). Most questions about practices unrelated to the system's purpose are "no".
+- "not_mentioned": it is plausible for this system, but the documents do not say either way. No references.
 `question` is the question id only, for example "A1". For yes and no, `statement` is one sentence stating the fact your quotes establish about this system.
 Put anything relevant under the AI Act that no question covers in other_concerns (kind "fact", with quotes).
 
@@ -241,11 +241,13 @@ def _case_messages(case: list[dict], task: str) -> list[dict]:
 
 def _checked(answers, pack: dict) -> tuple[dict, dict, list[str], set[str]]:
     """Yes/no answers as fact claims through the quote check and the Verifier: (claims, verdicts, problems, failed ids)."""
-    claims = [Claim(id=a.question, kind="fact", text=a.statement or rules.BY_ID[a.question].text, references=a.references)
+    claims = [Claim(id=a.question, kind="fact", references=a.references,
+                    text=((a.statement or rules.BY_ID[a.question].text) if a.answer == "yes"
+                          else f"Does not apply: {rules.BY_ID[a.question].text} {a.statement}"))
               for a in answers if a.answer != "not_mentioned"]
     holder = SimpleNamespace(claims=claims)
     problems = check_references(holder, pack)
-    verdicts = {v.claim_id: v for v in verify(holder, pack)} if claims else {}
+    verdicts = {v.claim_id: v for v in verify(holder, pack, TREE_VERIFIER_PROMPT)} if claims else {}
     failed = {c.id for c in claims if not c.references or verdicts[c.id].status != "supported"}
     return {c.id: c for c in claims}, verdicts, problems, failed
 
@@ -282,11 +284,15 @@ def answer_questions(case: list[dict], pack: dict) -> dict:
             "other_concerns": [c for c in given.other_concerns if c.references]}
 
 
-def verify(assessment: Assessment, pack: dict) -> list[Verdict]:
+TREE_VERIFIER_PROMPT = VERIFIER_PROMPT + """
+A claim that starts with "Does not apply:" is supported when the passages describe the system's purpose and functions and nothing in them suggests that it applies; it does not need an explicit denial."""
+
+
+def verify(assessment: Assessment, pack: dict, prompt: str = VERIFIER_PROMPT) -> list[Verdict]:
     claims = [{"claim_id": c.id, "kind": c.kind, "claim": c.text,
                "evidence": [{"chunk_id": r.chunk_id, "quote": r.quote, "passage": pack[r.chunk_id]["text"]}
                             for r in c.references]} for c in assessment.claims]
-    reply = chat([{"role": "system", "content": VERIFIER_PROMPT},
+    reply = chat([{"role": "system", "content": prompt},
                   {"role": "user", "content": json.dumps(claims, ensure_ascii=False)}])
     try:
         given = {v.claim_id: v for v in _parse(reply.get("content"), Verification).verdicts}
