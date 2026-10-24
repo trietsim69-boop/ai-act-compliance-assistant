@@ -87,7 +87,7 @@ def questionnaire_llm(*replies):
 
     def chat(messages, tools=None):
         calls.append({"messages": list(messages), "tools": tools})
-        if messages[0]["content"] == agents.VERIFIER_PROMPT:
+        if messages[0]["content"].startswith(agents.VERIFIER_PROMPT):
             claims = json.loads(messages[1]["content"])
             return {"role": "assistant", "content": json.dumps({"verdicts": [
                 {"claim_id": c["claim_id"], "status": "supported" if c["evidence"] else "insufficient", "reason": "r"} for c in claims]})}
