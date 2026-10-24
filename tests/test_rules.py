@@ -44,9 +44,9 @@ def test_clean_answers_give_high_confidence_and_no_questions():
     assert (d["confidence"], d["open_questions"], d["could_be"]) == ("high", [], None)
 
 
-def test_unknown_gating_fact_makes_the_tier_unclear():
-    d = run(A1="not_mentioned")
-    assert (d["risk_tier"], d["ai_system"], d["confidence"]) == ("unclear", "unclear", "low") and "A1" in d["open_questions"]
+def test_unknown_ai_system_is_assumed_classified_and_asked():
+    d = run(A1="not_mentioned", E4a="yes")
+    assert (d["risk_tier"], d["ai_system"], d["confidence"]) == ("high_risk", "unclear", "low") and "A1" in d["open_questions"]
 
 
 def test_unknown_eu_link_assumes_scope_and_asks():
