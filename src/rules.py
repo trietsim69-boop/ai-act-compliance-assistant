@@ -46,7 +46,8 @@ QUESTIONS = [
     Q("B1", "B", "Does the business develop the system, or have it developed, and place it on the market or put it into "
       "service under its own name or trademark?", ACT + "3",
       "that develops an AI system or a general-purpose AI model or that has an AI system", gating=True),
-    Q("B2", "B", "Does the business use the system under its own authority in a professional activity?", ACT + "3",
+    Q("B2", "B", "Does the business itself use the system under its own authority in its own professional activity? "
+      "Developing, selling, licensing or hosting it for customers who use it is not use.", ACT + "3",
       "using an AI system under its authority except where the AI system is used in the course of a personal", gating=True),
     Q("B3", "B", "Does the business put its own name or trademark on a high-risk AI system that someone else already "
       "placed on the market or put into service?", ACT + "25",
