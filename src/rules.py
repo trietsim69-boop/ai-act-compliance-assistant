@@ -298,7 +298,89 @@ def _role(answers: dict[str, str], tier: str, ask) -> str:
     return "both" if provider and deployer else "provider" if provider else "deployer" if deployer else "unclear"
 
 
-def legal_test(q: Question) -> dict:
+class Obligation(NamedTuple):
+    id: str  # unique per row; the article is in ref
+    requirement: str
+    ref: str
+    anchor: str  # verbatim from the passage, so it doubles as the quote of the code-written legal claim
+
+
+O = Obligation
+_PROVIDER_HIGH_RISK = [
+    O("9", "Risk management system", ACT + "9", "A risk management system shall be established, implemented, documented and maintained"),
+    O("10", "Data and data governance", ACT + "10", "shall be developed on the basis of training, validation and testing data sets that meet the quality criteria"),
+    O("11", "Technical documentation", ACT + "11", "The technical documentation of a high-risk AI system shall be drawn up before that system is placed on the market"),
+    O("12", "Record-keeping (logs)", ACT + "12", "High-risk AI systems shall technically allow for the automatic recording of events (logs)"),
+    O("13", "Transparency and instructions for use", ACT + "13", "designed and developed in such a way as to ensure that their operation is sufficiently transparent"),
+    O("14", "Human oversight by design", ACT + "14", "that they can be effectively overseen by natural persons during the period in which they are in use"),
+    O("15", "Accuracy, robustness and cybersecurity", ACT + "15", "achieve an appropriate level of accuracy, robustness, and cybersecurity"),
+    O("17", "Quality management system", ACT + "17", "Providers of high-risk AI systems shall put a quality management system in place"),
+    O("72", "Post-market monitoring", ACT + "72", "Providers shall establish and document a post-market monitoring system"),
+    O("73", "Reporting serious incidents", ACT + "73", "Providers of high-risk AI systems placed on the Union market shall report any serious incident"),
+]
+_CONFORMITY = {  # Art 43 by route
+    "annex_i": O("43", "Conformity assessment under the Annex I legislation", ACT + "43", "the provider of the system shall follow the relevant conformity assessment procedure"),
+    "biometrics": O("43", "Conformity assessment (Annex III point 1)", ACT + "43", "For high-risk AI systems listed in point 1 of Annex III"),
+    "annex_iii": O("43", "Conformity assessment based on internal control", ACT + "43", "providers shall follow the conformity assessment procedure based on internal control"),
+}
+_TRANSPARENCY = {  # Art 50 trigger -> (who owes it, obligation)
+    "G1": ("provider", O("50.1", "Tell people they are interacting with an AI system", ACT + "50", BY_ID["G1"].anchor)),
+    "G2": ("provider", O("50.2", "Mark synthetic content as AI-generated, machine-readably", ACT + "50", BY_ID["G2"].anchor)),
+    "G3": ("deployer", O("50.3", "Inform people exposed to emotion recognition or biometric categorisation", ACT + "50", BY_ID["G3"].anchor)),
+    "G4": ("deployer", O("50.4", "Disclose deep fakes as artificially generated or manipulated", ACT + "50", BY_ID["G4"].anchor)),
+    "G5": ("deployer", O("50.4b", "Disclose AI-generated text published to inform the public", ACT + "50", BY_ID["G5"].anchor)),
+}
+_LITERACY = O("4", "AI literacy of staff", ACT + "4", "shall take measures to support the development of AI literacy")
+
+
+def obligations(decision: dict, answers: dict[str, str]) -> list[Obligation]:
+    """The obligations that follow from a classify() decision. Pure; an unclear role lists both sides (fail closed)."""
+    tier, role = decision["risk_tier"], decision["role"]
+    if tier in ("out_of_scope", "unclear"):
+        return []
+    if tier == "prohibited":
+        return [O("5", "Stop placing on the market, putting into service or using the practice", ACT + "5",
+                  "The following AI practices shall be prohibited")]
+    yes = lambda q: answers.get(q) == "yes"  # noqa: E731
+    provider, deployer = role in ("provider", "both", "unclear"), role in ("deployer", "both", "unclear")
+    listed = [q.id for q in QUESTIONS if q.group == "E" and yes(q.id)]
+    annex_iii = bool(listed) and listed != ["E2"]  # Arts 27, 49, 86 exclude Annex III point 2
+    rows = []
+    if tier == "high_risk":
+        if provider:
+            route = "annex_iii" if listed else "annex_i"
+            route = "biometrics" if any(q.startswith("E1") for q in listed) else route
+            rows += _PROVIDER_HIGH_RISK + [_CONFORMITY[route]]
+            if annex_iii:
+                rows.append(O("49.1", "Register the system in the EU database", ACT + "49",
+                              "the provider or, where applicable, the authorised representative shall register"))
+        if deployer:
+            rows.append(O("26", "Deployer duties: instructions, human oversight, input data, monitoring, logs, informing people",
+                          ACT + "26", "take appropriate technical and organisational measures to ensure they use such systems"))
+            if annex_iii and (yes("B6") or yes("E5b") or yes("E5c")):
+                rows.append(O("27", "Fundamental rights impact assessment", ACT + "27",
+                              "shall perform an assessment of the impact on fundamental rights"))
+            if annex_iii and yes("B6"):  # ponytail: B6 also covers private public-service bodies, which 49(3) does not
+                rows.append(O("49.3", "Register the use in the EU database (public authority deployer)", ACT + "49",
+                              "deployers that are public authorities, Union institutions, bodies, offices or agencies"))
+            if annex_iii:
+                rows.append(O("86", "Explain individual decisions to affected persons on request", ACT + "86",
+                              "Any affected person subject to a decision which is taken by the deployer"))
+    if decision["annex_iii_exception"] and provider:
+        rows += [O("6.4", "Document why the Annex III system is not high-risk", ACT + "6",
+                   "A provider who considers that an AI system referred to in Annex III is not high-risk shall document"),
+                 O("49.2", "Register the system as not high-risk in the EU database", ACT + "49",
+                   "for which the provider has concluded that it is not high-risk according to Article 6(3)")]
+    rows += [o for q, (who, o) in _TRANSPARENCY.items() if q in decision["transparency"] and (provider if who == "provider" else deployer)]
+    if yes("H2"):
+        rows.append(O("53", "General-purpose AI model provider duties", ACT + "53", BY_ID["H2"].anchor))
+        if yes("H3"):
+            rows.append(O("55", "Systemic-risk model duties", ACT + "55",
+                          "providers of general-purpose AI models with systemic risk shall"))
+    return rows + [_LITERACY]
+
+
+def legal_test(q: Question | Obligation) -> dict:
     """The one corpus passage under q.ref that contains q.anchor."""
     hits = [c for id_, c in law.corpus().items() if id_.startswith(q.ref + "/") and find_span(q.anchor, c["text"])]
     if len(hits) != 1:
