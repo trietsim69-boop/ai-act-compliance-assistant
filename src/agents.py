@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from typing import Literal
 
 from openai import OpenAI
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 from pydantic.json_schema import SkipJsonSchema
 
 from src import law, rules
@@ -88,10 +88,15 @@ class Rating(BaseModel):
 
 
 class Answer(BaseModel):
-    question: str
+    question: str  # the id ("A1"); models often echo "A1: <question text>", trimmed below
     answer: Literal["yes", "no", "not_mentioned"]
     statement: str = ""
     references: list[Reference] = []
+
+    @field_validator("question")
+    @classmethod
+    def _id_only(cls, value: str) -> str:
+        return value.split(":", 1)[0].strip()
 
 
 class Answers(BaseModel):
@@ -113,7 +118,7 @@ Answer each question below about the AI system in the case documents. Its legal 
 - "yes": the documents show it. Quote the passage that shows it.
 - "no": the documents rule it out. Quote what the system does instead (for example its stated purpose or users), so that the quote excludes the question.
 - "not_mentioned": the documents do not let you decide. No references.
-For yes and no, `statement` is one sentence stating the fact your quotes establish about this system.
+`question` is the question id only, for example "A1". For yes and no, `statement` is one sentence stating the fact your quotes establish about this system.
 Put anything relevant under the AI Act that no question covers in other_concerns (kind "fact", with quotes).
 
 {questions}
