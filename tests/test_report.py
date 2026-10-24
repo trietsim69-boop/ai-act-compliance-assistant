@@ -32,3 +32,7 @@ def test_clean_result_has_no_warnings_and_missing_verdicts_count_as_insufficient
     result["verdicts"] = []
     report = build_report(result, [])
     assert report["claims"][0]["status"] == "insufficient" and report["requirements"][0]["unverified"] is True
+
+
+def test_free_assessor_results_have_no_decision(result):
+    assert build_report(result, [])["decision"] is None

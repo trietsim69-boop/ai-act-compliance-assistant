@@ -124,3 +124,40 @@ def test_bad_quote_off_the_path_falls_back_to_not_mentioned_without_revision(mon
     out = agents.answer_questions(CASE, {c["id"]: c for c in CASE})
     assert out["answers"]["H1"] == "not_mentioned" and not out["revised"] and len(calls) == 2
     assert [c.id for c in out["claims"]] == ["A1", "B2"]
+
+
+def test_tree_pipeline_rates_only_listed_obligations_and_fails_closed(monkeypatch):
+    from src.report import build_report
+    status = {"summary": "A chatbot.", "reasoning": "It talks to people.", "statuses": [
+        {"id": "50.1", "status": "met", "explanation": "Users are told.", "references": [{"chunk_id": "doc1:1", "quote": QUOTE}]},
+        {"id": "99", "status": "met", "explanation": "Invented obligation.", "references": []}]}
+    chat, calls = questionnaire_llm([answer("A1"), answer("B1"), answer("B2"), answer("G1")])
+
+    def routed(messages, tools=None):
+        if "## Task: rate the obligations" in messages[-1]["content"]:
+            calls.append({"messages": list(messages), "tools": tools})
+            return {"role": "assistant", "content": json.dumps(status)}
+        return chat(messages, tools)
+    monkeypatch.setattr(agents, "chat", routed)
+
+    result = agents.assess_case_tree(CASE)
+
+    a = result["assessment"]
+    assert (a["risk_tier"], a["role"]) == ("limited_risk", "both")
+    assert {r["requirement"]: r["status"] for r in a["requirements"]} == {
+        "Tell people they are interacting with an AI system": "met", "AI literacy of staff": "unclear"}  # 99 ignored, 4 unrated
+    legal = next(c for c in a["claims"] if c["id"] == "L50.1")["references"][0]
+    assert legal["start"] is not None and legal["chunk_id"] in result["sources"]
+    assert len(calls) == 4  # questionnaire, verifier, status, verifier
+    report = build_report(result, [])
+    assert report["decision"]["risk_tier"] == "limited_risk" and report["requirements"][0]["unverified"] is False
+
+
+def test_tree_pipeline_drops_unproven_met(monkeypatch):
+    status = {"summary": "s", "reasoning": "r", "statuses": [
+        {"id": "50.1", "status": "met", "explanation": "e", "references": [{"chunk_id": "doc1:1", "quote": "a quote that is not in the case"}]}]}
+    chat, _ = questionnaire_llm([answer("A1"), answer("B1"), answer("B2"), answer("G1")])
+    monkeypatch.setattr(agents, "chat", lambda m, tools=None: {"role": "assistant", "content": json.dumps(status)}
+                        if "## Task: rate the obligations" in m[-1]["content"] else chat(m, tools))
+    a = agents.assess_case_tree(CASE)["assessment"]
+    assert a["requirements"][0]["status"] == "unclear"
