@@ -550,10 +550,6 @@
         "status": "any"
       },
       {
-        "article": "49",
-        "status": "unclear"
-      },
-      {
         "article": "72",
         "status": "unclear"
       },
@@ -566,7 +562,7 @@
         "status": "unclear"
       }
     ],
-    "note": "Art 6(1) + Annex I MDR, notified body; provider"
+    "note": "Art 6(1) + Annex I MDR, notified body; provider; no Art 49(1) registration (Annex III only)"
   },
   {
     "name": "invoice_rules_engine",

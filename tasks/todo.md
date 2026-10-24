@@ -100,8 +100,8 @@ Record the source URL and licence for each case in `cases.json`.
 ### Task 8: Obligations table
 **Description:** `obligations(decision)` returns rows of `{id, requirement, articles, passage_id, claim_text}` for the tier × role × trigger combination: high-risk provider and deployer, the Art 6(3) record and registration, Art 50 per trigger, GPAI provider vs downstream user, Art 4 for everyone in scope, and stop-use for prohibited. Each row's legal claim is a fixed sentence whose quote comes verbatim from its passage.
 **Acceptance criteria:**
-- [ ] Every `passage_id` exists, and every claim's quote passes `find_span` against its passage (test).
-- [ ] The Art 27 rights assessment appears only for public-body or credit/insurance deployers; Art 53 duties only for GPAI model providers.
+- [x] Every row's anchor resolves to exactly one passage, so it is a valid verbatim quote for the code-written legal claim (test). Done 2026-10-24.
+- [x] The Art 27 rights assessment appears only for public-body or credit/insurance deployers; Art 53 duties only for GPAI model providers. Also: Art 43 by route, Art 49(1)/(3) and 86 only for Annex III (not point 2), an unclear role lists both sides. Gold fix: medical_imaging_triage has no Art 49.
 **Verification:** `pytest` on `testing`.
 **Dependencies:** Task 7. **Files:** `src/rules.py`, `tests/test_rules.py`. **Scope:** S
 

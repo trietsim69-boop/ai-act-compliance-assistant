@@ -16,7 +16,7 @@ Generated from `evals/cases.json` and `evals/private/cases.json` (private, git-i
 | life_insurance_pricing | 461 | yes | high_risk | – | – | 26:unclear, 27:unclear, 86:unclear, 4:unclear | Annex III 5(c); deployer duties; provider role contested |
 | retail_face_matching | 544 | yes | high_risk | deployer | – | 26:unclear, 4:unclear | Annex III 1(a) remote biometric identification; deployer; not law enforcement |
 | deepfake_marketing | 492 | – | limited_risk | deployer | – | 50:gap, 4:unclear | Art 50(4) deep fake; labelling undecided |
-| medical_imaging_triage | 447 | yes | high_risk | provider | – | provider set, 43:any, 4:unclear | Art 6(1) + Annex I MDR, notified body; provider |
+| medical_imaging_triage | 447 | yes | high_risk | provider | – | provider set without 49, 43:any, 4:unclear | Art 6(1) + Annex I MDR, notified body; provider; no Art 49(1) registration (Annex III only) |
 | invoice_rules_engine | 525 | no | – | – | no | none | not an AI system (fixed human-written rules) |
 | municipal_social_scoring | 531 | yes | prohibited | deployer | – | 5:gap | Art 5(1)(c) social scoring |
 | smart_toy_challenges | 470 | yes | prohibited | provider | – | 5:gap | Art 5(1)(b) exploiting children's age |

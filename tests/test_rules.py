@@ -1,6 +1,6 @@
 import pytest
 
-from src.rules import BY_ID, QUESTIONS, classify, legal_test, render
+from src.rules import BY_ID, QUESTIONS, classify, legal_test, obligations, render
 
 NO = {q.id: "no" for q in QUESTIONS} | {"A1": "yes", "A3": "yes", "B2": "yes"}  # an in-scope AI system, used, nothing else
 
@@ -107,3 +107,39 @@ def test_every_art5_and_annex_iii_point_has_a_question():
 def test_render_lists_each_legal_passage_once():
     text = render()
     assert text.count("[eu_ai_act/art-5/1]") == 1 and "A1: Does the system infer" in text
+
+
+def table(**changed):
+    answers = NO | changed
+    return {o.id for o in obligations(classify(answers), answers)}
+
+
+def test_every_obligation_anchor_finds_exactly_one_passage():
+    everything = NO | {"B1": "yes", "B6": "yes", "E5b": "yes", "H2": "yes", "H3": "yes"} | {f"G{i}": "yes" for i in range(1, 6)}
+    rows = obligations(classify(everything), everything) + obligations(classify(NO | {"E4a": "yes", "F1": "yes", "B1": "yes"}), NO | {"E4a": "yes", "F1": "yes", "B1": "yes"})
+    rows += obligations(classify(NO | {"D1": "yes", "D2": "yes", "B1": "yes"}), NO | {"D1": "yes", "D2": "yes", "B1": "yes"})
+    rows += obligations(classify(NO | {"E1a": "yes", "B1": "yes"}), NO | {"E1a": "yes", "B1": "yes"})
+    rows += obligations(classify(NO | {"C5": "yes"}), NO | {"C5": "yes"})
+    for o in rows:
+        legal_test(o)  # raises LookupError otherwise
+
+
+@pytest.mark.parametrize("changed, has, lacks", [
+    ({}, {"4"}, {"9", "26"}),                                               # minimal: AI literacy only
+    ({"A3": "no"}, set(), {"4"}),                                           # out of scope: nothing
+    ({"C5": "yes"}, {"5"}, {"4", "26"}),                                    # prohibited: stop
+    ({"E4a": "yes"}, {"26", "86", "4"}, {"9", "27", "49.3"}),               # private deployer
+    ({"E4a": "yes", "B6": "yes"}, {"26", "27", "49.3", "86"}, {"9"}),       # public-body deployer
+    ({"E5b": "yes"}, {"26", "27"}, {"49.3"}),                               # credit scoring deployer: FRIA
+    ({"E4a": "yes", "B1": "yes", "B2": "no"}, {"9", "17", "43", "49.1", "73"}, {"26", "86"}),  # provider only
+    ({"D1": "yes", "D2": "yes", "B1": "yes", "B2": "no"}, {"9", "43"}, {"49.1", "86"}),  # Annex I: no Annex III duties
+    ({"E4a": "yes", "F1": "yes", "B1": "yes"}, {"6.4", "49.2"}, {"9", "26"}),  # Art 6(3) exception
+    ({"G1": "yes", "B1": "yes", "B2": "no"}, {"50.1"}, {"50.3"}),           # chatbot provider
+    ({"G4": "yes"}, {"50.4"}, {"50.1"}),                                    # deep fake deployer
+    ({"H1": "yes"}, {"4"}, {"53"}),                                         # downstream GPAI user: no Art 53
+    ({"H1": "yes", "H2": "yes"}, {"53"}, {"55"}),
+    ({"B2": "no", "E4a": "yes"}, {"9", "26"}, set()),                       # unclear role lists both sides
+])
+def test_obligations_follow_tier_role_and_triggers(changed, has, lacks):
+    ids = table(**changed)
+    assert has <= ids and not (lacks & ids), ids
