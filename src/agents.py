@@ -272,12 +272,13 @@ def answer_questions(case: list[dict], pack: dict) -> dict:
         c2, v2, p2, f2 = _checked(again.values(), pack)
         problems = [p for p in problems if p.split(":")[0] not in again] + p2
         claims, verdicts, failed = claims | c2, verdicts | v2, (failed - set(again)) | f2
+    unverified = {q: answers[q].answer for q in sorted(failed)}  # what the model said before failing closed
     for q in failed:
         answers[q] = answers[q].model_copy(update={"answer": "not_mentioned", "references": []})
     check_references(SimpleNamespace(claims=given.other_concerns), pack)
     kept = [q for q, a in answers.items() if a.answer != "not_mentioned"]
     return {"answers": {q: a.answer for q, a in answers.items()}, "claims": [claims[q] for q in kept],
-            "verdicts": [verdicts[q] for q in kept], "problems": problems, "revised": bool(retry),
+            "verdicts": [verdicts[q] for q in kept], "problems": problems, "revised": bool(retry), "unverified": unverified,
             "other_concerns": [c for c in given.other_concerns if c.references]}
 
 
@@ -355,7 +356,8 @@ def assess_case_tree(case: list[dict]) -> dict:
     cited = sorted({r.chunk_id for c in claims for r in c.references})
     return {"assessment": assessment, "verdicts": [v.model_dump() for v in all_verdicts], "reference_problems": problems,
             "revised": q["revised"], "sources": {i: pack[i] for i in cited},
-            "decision": decision | {"other_concerns": [c.text for c in q["other_concerns"]]}}
+            "decision": decision | {"answers": q["answers"], "unverified": q["unverified"],
+                                    "other_concerns": [c.text for c in q["other_concerns"]]}}
 
 
 def assess_case(case: list[dict]) -> dict:
