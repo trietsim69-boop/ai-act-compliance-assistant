@@ -16,7 +16,7 @@ from pydantic.json_schema import SkipJsonSchema
 
 from src import law
 from src.citations import check_references
-from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_EXTRA_BODY, LLM_MODEL
 from src.ingest import case_passages
 
 MAX_SEARCH_ROUNDS = 6
@@ -118,7 +118,8 @@ def _client() -> OpenAI:
 
 def chat(messages: list[dict], tools: list | None = None) -> dict:
     kwargs = {"tools": tools} if tools else {"response_format": {"type": "json_object"}}
-    reply = _client().chat.completions.create(model=LLM_MODEL, messages=messages, temperature=0.1, **kwargs)
+    reply = _client().chat.completions.create(model=LLM_MODEL, messages=messages, temperature=0.1,
+                                              extra_body=LLM_EXTRA_BODY, **kwargs)
     message = reply.choices[0].message.model_dump(exclude_none=True)
     return {k: v for k, v in message.items() if k in ("role", "content", "tool_calls")}
 
