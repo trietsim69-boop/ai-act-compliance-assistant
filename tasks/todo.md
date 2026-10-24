@@ -1,6 +1,6 @@
 # Decision-tree assessment: tasks
 
-Plan and decisions: [plan.md](plan.md). Diagram: [../decision-tree-architecture.html](../decision-tree-architecture.html).
+Plan and decisions: [plan.md](plan.md). Diagram: [../decision-tree-architecture.html](../decision-tree-architecture.html). These files live on `testing` only (never on a branch bound for `main`).
 
 Every push to `main` deploys production. Each phase ends in one PR into `main` that is safe to deploy:
 PRs 2 and 3 add code that nothing in production calls yet, PR 4 is the switch (the release), PRs 5 and 6 add re-running from your answers.
@@ -60,6 +60,7 @@ Record the source URL and licence for each case in `cases.json`.
 **Acceptance criteria:**
 - [ ] Both result tables are written into `plan.md` under "Baseline".
 - [ ] `deepseek-flash` returns valid JSON and tool calls (it thinks by default).
+- [ ] Count the old pipeline's requirements that neither quote nor name an article (scored as missed). If more than a few, add a requirement-name → article fallback (reusing the Task 8 requirement names) so both pipelines are scored on the same vocabulary.
 **Verification:** the table numbers match the run's output; cost reported (estimate $1–3).
 **Dependencies:** Checkpoint A. **Files:** `tasks/plan.md`. **Scope:** XS
 
