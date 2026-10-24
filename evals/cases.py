@@ -4,7 +4,7 @@
 
 Besides tier / GPAI / AI system / role, it measures retrieval as the Assessor actually uses it: `saw` is how many of a
 case's `must_see` provisions appeared in any search_law result during the run. Every query the Assessor wrote is
-appended to data/eval_queries.jsonl (git-ignored) for analysis.
+appended to data/eval_queries.jsonl and each full result saved to data/eval_results/<pipeline>/<case>.json (git-ignored).
 
 Obligations, for cases with `expected_obligations` ([{"article": "26", "status": "gap"|"met"|"unclear"|"any"}]):
 `obl` is how many gold articles some requirement covers, `false_met` how many gold gap/unclear articles a requirement
@@ -111,6 +111,9 @@ def main(names: list[str]) -> int:
         cost = sum(tokens[k] * PRICE[k] for k in PRICE) / 1e6
         cost_total += cost
         spent = f"tokens hit/miss/out={'/'.join(f'{v:,}' for v in tokens.values())} ${cost:.4f}"
+        saved = ROOT / "data" / "eval_results" / ("tree" if tree else "free") / f"{case['name']}.json"  # git-ignored
+        saved.parent.mkdir(parents=True, exist_ok=True)
+        saved.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
         with LOG.open("a", encoding="utf-8") as f:
             for s in searches:
                 f.write(json.dumps({"case": case["name"], "query": s["query"], "ids": s["ids"]}, ensure_ascii=False) + "\n")
