@@ -7,3 +7,4 @@ __pycache__/
 .tmp/
 data/
 CLAUDE.md
+evals/private/

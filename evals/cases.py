@@ -21,7 +21,9 @@ from src import law
 from src.config import ROOT
 from src.ingest import case_passages
 
-CASES = json.loads((Path(__file__).parent / "cases.json").read_text(encoding="utf-8"))
+PRIVATE = Path(__file__).parent / "private" / "cases.json"  # git-ignored: documents we may not republish
+CASES = [c for path in (Path(__file__).parent / "cases.json", PRIVATE) if path.exists()
+         for c in json.loads(path.read_text(encoding="utf-8"))]
 LOG = ROOT / "data" / "eval_queries.jsonl"
 _flat = lambda s: " ".join(s.split())  # noqa: E731
 _NAMED = re.compile(r"\bArt(?:icles?|\.)?\s*(\d+[a-z]?)\b", re.I)  # ponytail: first number only, "Articles 9-15" -> 9
