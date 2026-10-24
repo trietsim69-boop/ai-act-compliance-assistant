@@ -59,7 +59,7 @@ Record the source URL and licence for each case in `cases.json`.
 **Description:** Changed 2026-10-24: no full baseline now. Task 12 runs the old and new pipelines side by side once, and that run is the baseline. Here: `evals.cases` captures token usage and cost per case (DeepSeek `usage`: cache hit / miss / output), then today's pipeline runs on `deepseek-flash` for one short case and the longest case (DUO, 192k chars).
 **Acceptance criteria:**
 - [x] `deepseek-flash` returns valid JSON and tool calls (it thinks by default).
-- [x] The DUO case's time is recorded against the 300 s limit, with its tokens and cost: 502 s, over the limit (see plan.md).
+- [x] The DUO case's time is recorded against the 300 s limit, with its tokens and cost: 67 s with thinking off (502 s with it on), see plan.md.
 **Verification:** the numbers in `plan.md` match the run's output.
 **Dependencies:** none. **Files:** `evals/cases.py`, `tasks/plan.md`. **Scope:** XS
 
