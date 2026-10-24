@@ -53,19 +53,18 @@ Record the source URL and licence for each case in `cases.json`.
 **Verification:** `case_passages` ingests each document without errors; character counts are printed.
 **Dependencies:** Task 1. **Files:** `evals/cases.json`, `evals/sources/` (licence notes). **Scope:** M
 
-### Checkpoint A: you review the gold lists (Tasks 2–3) before any paid run — sheet: [gold_review.md](gold_review.md)
+### Checkpoint A: you review the gold lists (Tasks 2–3) before Task 12, the full paid run — sheet: [gold_review.md](gold_review.md)
 
-### Task 4: Baseline run (live, costs money)
-**Description:** Run `evals.cases` on today's pipeline on all 32 cases, twice: with `LLM_MODEL=deepseek-chat` and with `LLM_MODEL=deepseek-flash`. Record tier, role, GPAI, obligation recall, false "met", % supported, `saw`, time per case and cost, plus the longest case's time against the 300-second limit.
+### Task 4: Smoke test on `deepseek-flash` (live, a few cents)
+**Description:** Changed 2026-10-24: no full baseline now. Task 12 runs the old and new pipelines side by side once, and that run is the baseline. Here: `evals.cases` captures token usage and cost per case (DeepSeek `usage`: cache hit / miss / output), then today's pipeline runs on `deepseek-flash` for one short case and the longest case (DUO, 192k chars).
 **Acceptance criteria:**
-- [ ] Both result tables are written into `plan.md` under "Baseline".
-- [ ] `deepseek-flash` returns valid JSON and tool calls (it thinks by default).
-- [ ] Count the old pipeline's requirements that neither quote nor name an article (scored as missed). If more than a few, add a requirement-name → article fallback (reusing the Task 8 requirement names) so both pipelines are scored on the same vocabulary.
-**Verification:** the table numbers match the run's output; cost reported (estimate $1–3).
-**Dependencies:** Checkpoint A. **Files:** `tasks/plan.md`. **Scope:** XS
+- [x] `deepseek-flash` returns valid JSON and tool calls (it thinks by default).
+- [x] The DUO case's time is recorded against the 300 s limit, with its tokens and cost: 502 s, over the limit (see plan.md).
+**Verification:** the numbers in `plan.md` match the run's output.
+**Dependencies:** none. **Files:** `evals/cases.py`, `tasks/plan.md`. **Scope:** XS
 
 ### Task 5: Pin `deepseek-flash` → PR 1
-**Description:** In `src/config.py`, change the default model to `deepseek-flash` and update the model line in the README. Your `.env` currently sets `LLM_MODEL=deepseek-chat`, so update it too (with your OK). Go ahead only if Task 4 shows flash at least as good as chat; otherwise stay on `deepseek-chat`, skip this PR, and run Phases 2–3 on chat (decided 2026-10-24).
+**Description:** In `src/config.py`, change the default model to `deepseek-flash` and update the model line in the README. Your `.env` currently sets `LLM_MODEL=deepseek-chat`, so update it too (with your OK). Go ahead if the Task 4 smoke test passes; otherwise stay on `deepseek-chat`, skip this PR, and run Phases 2–3 on chat (decided 2026-10-24).
 **Acceptance criteria:**
 - [ ] On the branch's preview URL, one live assessment succeeds with flash.
 - [ ] After merge, one live production assessment succeeds.
@@ -144,7 +143,7 @@ Record the source URL and licence for each case in `cases.json`.
 ## Phase 3: Compare, then switch → PR 4 `assessment: decision tree replaces the free Assessor` (the release)
 
 ### Task 12: Comparison and decision
-**Description:** Run old and new on all 32 cases on `deepseek-flash`. Write both tables into `plan.md`, check them against the bar (Q15), and **you decide**. If the bar isn't met: fix and re-run, no PR.
+**Description:** The one full paid run (also the baseline, since Task 4 became a smoke test). Run old and new on all 33 cases on `deepseek-flash`, including the old pipeline's requirements that neither quote nor name an article (if more than a few, add a requirement-name → article fallback reusing the Task 8 names). Write both tables into `plan.md`, check them against the bar (Q15), and **you decide**. If the bar isn't met: fix and re-run, no PR.
 **Acceptance criteria:**
 - [ ] Tier, role and GPAI accuracy are at least the old pipeline's.
 - [ ] Obligation recall is at least 90% with 0 false "met".

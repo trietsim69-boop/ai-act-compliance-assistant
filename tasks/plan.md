@@ -89,3 +89,13 @@ cover for each question and obligation; add a source only where a question's leg
 ## Verification
 `python -m pytest -q` on `testing` (offline); `python -m evals.cases` on main vs branch, both on `deepseek-flash`
 (live, cost reported); time the longest case against the 300 s limit; check the adoption bar (Q15).
+
+## Task 4 smoke test (2026-10-24, old pipeline, `deepseek-flash`)
+| Case | Result | Time | Calls / searches | Tokens hit / miss / out | Cost (peak) |
+|---|---|---|---|---|---|
+| hr_screening (3k chars) | PASS, obl 3/3, false met 0, supported 44/46 | 183 s | 12 / 14 | 132k / 114k / 39k | $0.082 |
+| duo_student_finance_profile (192k) | FAIL: high_risk, ai_system unclear (gold: not an AI system) | 502 s | 9 / 40 | 567k / 327k / 105k | $0.228 |
+
+- Flash returns valid JSON and tool calls → PR 1 goes ahead.
+- The old pipeline needs 502 s on a 192k-char case: production (300 s limit, 500k-char cap) times out on long uploads today.
+- Output (thinking) and uncached tool results dominate cost: ~$0.08 per short case at peak, half off-peak. A full Task 12 run of both pipelines on 33 cases is roughly $3–6 at peak; run it off-peak (outside 01–04 and 06–10 UTC on weekdays).
