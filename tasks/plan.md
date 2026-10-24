@@ -22,9 +22,9 @@ Tasks: [todo.md](todo.md). Branch `decision-tree` off `main` (687611c, includes 
 | Gold lists encode my reading of the Act | Med | You review at Checkpoint A; each case names its deciding article |
 | `testing` falls behind `main` | Low | Merge `main` and `decision-tree` into `testing` before every run |
 
-## Open questions
-- Re-run trust (Task 14): earlier answers come back from the browser. They pass `check_references` again but skip the Verifier. OK, since it is the user's own report?
-- If flash is worse than chat in Task 4: keep `deepseek-chat` while it still answers, and run the comparison on chat?
+## Decided (2026-10-24)
+- Re-run trust (Task 14): earlier answers come back from the browser, pass `check_references` again, skip the Verifier. Accepted: it is the user's own report.
+- Model: if flash is worse than chat in Task 4, stay on `deepseek-chat` (no PR 1 model change) and run the comparison on chat.
 
 ## Context
 Today one free-form Assessor call decides tier, role and obligations; code only checks quotes. That is the

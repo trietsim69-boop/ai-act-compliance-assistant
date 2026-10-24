@@ -63,7 +63,7 @@ Record the source URL and licence for each case in `cases.json`.
 **Dependencies:** Checkpoint A. **Files:** `tasks/plan.md`. **Scope:** XS
 
 ### Task 5: Pin `deepseek-flash` → PR 1
-**Description:** In `src/config.py`, change the default model to `deepseek-flash` and update the model line in the README. Your `.env` currently sets `LLM_MODEL=deepseek-chat`, so update it too (with your OK). Go ahead only if Task 4 shows flash at least as good as chat.
+**Description:** In `src/config.py`, change the default model to `deepseek-flash` and update the model line in the README. Your `.env` currently sets `LLM_MODEL=deepseek-chat`, so update it too (with your OK). Go ahead only if Task 4 shows flash at least as good as chat; otherwise stay on `deepseek-chat`, skip this PR, and run Phases 2–3 on chat (decided 2026-10-24).
 **Acceptance criteria:**
 - [ ] On the branch's preview URL, one live assessment succeeds with flash.
 - [ ] After merge, one live production assessment succeeds.
