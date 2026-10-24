@@ -43,4 +43,5 @@ def build_report(result: dict, file_errors: list[dict]) -> dict:
         "overview": {k: a[k] for k in ("summary", "ai_system", "role", "risk_tier", "gpai_involved", "confidence", "reasoning")},
         "requirements": requirements, "claims": claims, "questions": a["missing_information"],
         "warnings": warnings, "disclaimer": DISCLAIMER,
+        "decision": result.get("decision"),  # decision-tree path; None from the free Assessor
     }
