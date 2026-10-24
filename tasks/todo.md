@@ -34,8 +34,8 @@ Commands (on `testing`): `python -m pytest -q` (offline), `python -m evals.retri
 
 Add `expected_obligations` to the existing 20 too. Gold tiers and obligations come from reading the provisions, never from pipeline output.
 **Acceptance criteria:**
-- [ ] Each new case has expected tier, role, AI-system status, GPAI involvement and obligations, with a one-line note naming the deciding article.
-- [ ] All 28 cases have `expected_obligations`.
+- [x] Each new case has expected tier, role, AI-system status, GPAI involvement and obligations, with a one-line note naming the deciding article.
+- [x] All 29 short cases have `expected_obligations` (124 gold obligations); done 2026-10-24 (`315b8fe`).
 **Verification:** JSON loads; **you review the gold lists** (checkpoint below).
 **Dependencies:** Task 1 (schema). **Files:** `evals/cases.json`. **Scope:** M
 
@@ -48,12 +48,12 @@ Add `expected_obligations` to the existing 20 too. Gold tiers and obligations co
 
 Record the source URL and licence for each case in `cases.json`.
 **Acceptance criteria:**
-- [ ] 4 long cases with gold expectations; at least one is over 100,000 characters.
-- [ ] Every document's source and licence is recorded.
+- [x] 4 long cases: GOV.UK Chat 22k, needle-in-VAT-guide 121k (public, OGL); DUO 192k, Amsterdam 14k (`evals/private/`, git-ignored: no licence stated, repo is public). Done (`698a4fe`).
+- [x] Every document's source and licence is recorded.
 **Verification:** `case_passages` ingests each document without errors; character counts are printed.
 **Dependencies:** Task 1. **Files:** `evals/cases.json`, `evals/sources/` (licence notes). **Scope:** M
 
-### Checkpoint A: you review the gold lists (Tasks 2–3) before any paid run
+### Checkpoint A: you review the gold lists (Tasks 2–3) before any paid run — sheet: [gold_review.md](gold_review.md)
 
 ### Task 4: Baseline run (live, costs money)
 **Description:** Run `evals.cases` on today's pipeline on all 32 cases, twice: with `LLM_MODEL=deepseek-chat` and with `LLM_MODEL=deepseek-flash`. Record tier, role, GPAI, obligation recall, false "met", % supported, `saw`, time per case and cost, plus the longest case's time against the 300-second limit.
@@ -94,6 +94,7 @@ Record the source URL and licence for each case in `cases.json`.
 **Acceptance criteria:**
 - [ ] About 20 table tests: every tier path, Art 6(3) with and without profiling, `not_mentioned` on a gating fact (tier `unclear`), `not_mentioned` that could only raise the tier (sets `could_be`), and an off-path `not_mentioned` (no question).
 - [ ] No I/O and no LLM import in `rules.py`.
+- [ ] A3 (EU link) `not_mentioned` counts as in scope plus an open question, not `unclear`: most cases never state their location. Only an explicit non-EU answer gives `out_of_scope`.
 **Verification:** `pytest` on `testing`.
 **Dependencies:** Task 6. **Files:** `src/rules.py`, `tests/test_rules.py`. **Scope:** M
 
