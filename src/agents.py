@@ -23,6 +23,7 @@ from src.ingest import case_passages
 MAX_SEARCH_ROUNDS = 6
 MAX_CASE_CHARS = 500_000
 LLM_TIMEOUT_S = 120  # per call; the SDK default is 600
+MAX_OUTPUT_TOKENS = 32_768  # DeepSeek's default (~8k) cut off the 69-answer questionnaire reply
 
 
 class Reference(BaseModel):
@@ -192,7 +193,7 @@ def _client() -> OpenAI:
 
 def chat(messages: list[dict], tools: list | None = None) -> dict:
     kwargs = {"tools": tools} if tools else {"response_format": {"type": "json_object"}}
-    reply = _client().chat.completions.create(model=LLM_MODEL, messages=messages, temperature=0.1,
+    reply = _client().chat.completions.create(model=LLM_MODEL, messages=messages, temperature=0.1, max_tokens=MAX_OUTPUT_TOKENS,
                                               extra_body=LLM_EXTRA_BODY, **kwargs)
     message = reply.choices[0].message.model_dump(exclude_none=True)
     return {k: v for k, v in message.items() if k in ("role", "content", "tool_calls")}
