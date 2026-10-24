@@ -1,3 +1,2 @@
-# Keep GitHub language stats about the code: the built UI bundle and downloaded legal sources are not source code.
+# Keep GitHub language stats about the code: the built UI bundle is not source code.
 public/index.html linguist-generated
-corpus/src/** linguist-vendored

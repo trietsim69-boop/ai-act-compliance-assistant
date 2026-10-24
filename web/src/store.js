@@ -1,7 +1,6 @@
 // Case state for one analysis session. The server is stateless: files, description and the last result live
 // here, in memory, and nothing is stored server-side.
 import { create } from "zustand";
-import { toast } from "sonner";
 
 export const FORMATS = [".pdf", ".docx", ".pptx", ".html", ".htm", ".csv", ".txt", ".md"];
 export const MAX_BYTES = 4_000_000;
@@ -24,6 +23,7 @@ let timer = null;
 export const useCase = create((set, get) => ({
   code: readCode(),
   files: [], // {name, size, file}
+  rejected: [], // names from the last add that are not a supported format
   description: "",
   phase: "empty", // empty | ready | running | done | error
   startedAt: 0,
@@ -36,29 +36,23 @@ export const useCase = create((set, get) => ({
   setDescription: (description) => set((s) => ({ description, phase: phaseFor(s.files, description, s.phase) })),
   addFiles: (list) => {
     const s = get();
-    const next = [...s.files];
+    const next = [...s.files], rejected = [];
     for (const file of list) {
       const ext = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
-      if (!FORMATS.includes(ext)) {
-        toast.error(`${file.name} is not a supported format`, { description: "Use PDF, DOCX, PPTX, HTML, CSV, TXT or MD." });
-        continue;
-      }
-      if (!next.some((x) => x.name === file.name)) next.push({ name: file.name, size: file.size, file });
+      if (!FORMATS.includes(ext)) rejected.push(file.name);
+      else if (!next.some((x) => x.name === file.name)) next.push({ name: file.name, size: file.size, file });
     }
-    set({ files: next, phase: phaseFor(next, s.description, s.phase) });
+    set({ files: next, rejected, phase: phaseFor(next, s.description, s.phase) });
   },
   removeFile: (name) => set((s) => {
     const files = s.files.filter((f) => f.name !== name);
-    return { files, phase: phaseFor(files, s.description, s.phase) };
+    return { files, rejected: [], phase: phaseFor(files, s.description, s.phase) };
   }),
 
   run: async () => {
     const s = get();
-    if (s.phase === "running") return;
-    if (totalBytes(s.files) > MAX_BYTES) {
-      toast.error("Uploads are over 4 MB", { description: "Remove a file before starting." });
-      return;
-    }
+    // Over the limit: the file list says so and Assess is disabled; this guards the error box's "Try again".
+    if (s.phase === "running" || totalBytes(s.files) > MAX_BYTES) return;
     saveCode(s.code);
     const startedAt = Date.now();
     set({ phase: "running", startedAt, now: startedAt, error: null });
@@ -98,10 +92,9 @@ export const useCase = create((set, get) => ({
     return { description, phase: "ready", focus: null };
   }),
   reset: () => {
+    if (!confirm("Start a new case? This result is not saved anywhere.")) return;
     clearInterval(timer);
-    const { files, description, phase, data, error } = get();
-    set({ files: [], description: "", phase: "empty", data: null, error: null, focus: null });
-    toast("Started a new case", { action: { label: "Undo", onClick: () => set({ files, description, phase, data, error }) } });
+    set({ files: [], rejected: [], description: "", phase: "empty", data: null, error: null, focus: null });
   },
   setFocus: (focus) => set({ focus }),
 }));
@@ -117,13 +110,6 @@ export function downloadJSON(data) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   Object.assign(document.createElement("a"), { href: url, download: "ai-act-assessment.json" }).click();
   URL.revokeObjectURL(url);
-  toast("Downloaded ai-act-assessment.json");
-}
-
-// Development only (tree-shaken from builds): render a real-shaped sample result without calling the API.
-export async function loadSample(name = "hr") {
-  const { default: sample } = await import("./sample.json");
-  useCase.setState({ phase: "done", data: structuredClone(sample[name]), focus: null });
 }
 
 // Leaving mid-run or with an unsaved result loses it (the server keeps nothing): ask first.

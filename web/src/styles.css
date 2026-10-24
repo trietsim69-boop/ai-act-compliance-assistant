@@ -97,16 +97,18 @@ details summary { cursor: pointer; color: var(--accent); font-size: .87rem; }
 
 .corpus { margin: 16px 0 0; } .corpus ul { margin: 8px 0; padding-left: 18px; font-size: .9rem; }
 
-/* Evidence side sheet (base-ui Dialog) */
-.sheet-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / .25); transition: opacity 200ms ease-out; }
-.sheet-backdrop[data-starting-style], .sheet-backdrop[data-ending-style] { opacity: 0; }
-.sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100vw); background: var(--card); box-shadow: var(--shadow);
-  display: flex; flex-direction: column; transition: transform 250ms var(--ease-out); outline: none; padding-bottom: env(safe-area-inset-bottom); }
+/* Evidence side sheet: native <dialog> opened with showModal() */
+.sheet { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(560px, 100vw); max-width: none; height: 100%; max-height: none;
+  border: 0; padding: 0 0 env(safe-area-inset-bottom); background: var(--card); color: inherit; box-shadow: var(--shadow);
+  flex-direction: column; transition: transform 250ms var(--ease-out); outline: none; }
+.sheet[open] { display: flex; }
 .sheet:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.sheet[data-starting-style], .sheet[data-ending-style] { transform: translateX(100%); }
+.sheet::backdrop { background: rgb(0 0 0 / .25); transition: opacity 200ms ease-out; }
+@starting-style { .sheet[open] { transform: translateX(100%); } .sheet[open]::backdrop { opacity: 0; } }
+body:has(.sheet[open]) { overflow: hidden; }
 .sheet-top { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
 .sheet-title { flex: 1; font-size: 1.05rem; margin: 0; }
-.sheet-body { padding: 16px; overflow-y: auto; overscroll-behavior: contain; }
+.sheet-body { flex: 1; padding: 16px; overflow-y: auto; overscroll-behavior: contain; }  /* fills the sheet: only backdrop clicks close it */
 .sheet-claim { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 12px; }
 
 /* Page */
@@ -154,7 +156,7 @@ details summary { cursor: pointer; color: var(--accent); font-size: .87rem; }
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
 }
 @media print {
-  .no-print, .toc, .top .btn, [data-sonner-toaster] { display: none !important; }
+  .no-print, .toc, .top .btn { display: none !important; }
   body { background: #fff; color: #000; font-size: 11pt; }
   .main { padding: 0; max-width: none; }
   .quote { background: none; padding: 0; }

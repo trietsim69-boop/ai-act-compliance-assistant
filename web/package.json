@@ -5,15 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "sample": "python make_sample.py"
+    "build": "vite build"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "clsx": "^2.1.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "sonner": "^2.0.8",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
