@@ -5,8 +5,13 @@
 Besides tier / GPAI / AI system / role, it measures retrieval as the Assessor actually uses it: `saw` is how many of a
 case's `must_see` provisions appeared in any search_law result during the run. Every query the Assessor wrote is
 appended to data/eval_queries.jsonl (git-ignored) for analysis.
+
+Obligations, for cases with `expected_obligations` ([{"article": "26", "status": "gap"|"met"|"unclear"|"any"}]):
+`obl` is how many gold articles some requirement covers, `false_met` how many gold gap/unclear articles a requirement
+marks met. A requirement covers an article it quotes (via its claims) or names ("Article 26", "Art. 26").
 """
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -19,6 +24,27 @@ from src.ingest import case_passages
 CASES = json.loads((Path(__file__).parent / "cases.json").read_text(encoding="utf-8"))
 LOG = ROOT / "data" / "eval_queries.jsonl"
 _flat = lambda s: " ".join(s.split())  # noqa: E731
+_NAMED = re.compile(r"\bArt(?:icles?|\.)?\s*(\d+[a-z]?)\b", re.I)  # ponytail: first number only, "Articles 9-15" -> 9
+
+
+def obligations(result: dict) -> dict[str, set[str]]:
+    """Act article -> statuses of the requirements that cover it."""
+    a = result["assessment"]
+    claims = {c["id"]: c for c in a["claims"]}
+    found: dict[str, set[str]] = {}
+    for r in a["requirements"]:
+        quoted = [ref["chunk_id"] for i in r["claim_ids"] for ref in claims.get(i, {}).get("references", [])]
+        articles = {i.split("/")[1].removeprefix("art-") for i in quoted if i.startswith(f"{law.ACT}/art-")}
+        for article in articles | set(_NAMED.findall(f"{r['requirement']} {r['explanation']}")):
+            found.setdefault(article, set()).add(r["status"])
+    return found
+
+
+def score_obligations(gold: list[dict], result: dict) -> tuple[int, int]:
+    """(gold articles covered, gold gap/unclear articles marked met)."""
+    found = obligations(result)
+    return (sum(o["article"] in found for o in gold),
+            sum(o["status"] in ("gap", "unclear") and "met" in found.get(o["article"], ()) for o in gold))
 
 
 def main(names: list[str]) -> int:
@@ -33,7 +59,7 @@ def main(names: list[str]) -> int:
     law.search = logged_search
 
     LOG.parent.mkdir(exist_ok=True)
-    failures = seen_total = must_total = 0
+    failures = seen_total = must_total = obl_hit = obl_total = false_met = 0
     for case in CASES:
         if names and case["name"] not in names:
             continue
@@ -53,6 +79,11 @@ def main(names: list[str]) -> int:
         must = case.get("must_see", [])
         seen = sum(any(_flat(q) in t for t in shown) for q in must)
         seen_total, must_total = seen_total + seen, must_total + len(must)
+        gold = case.get("expected_obligations")
+        if gold:
+            hit, wrong = score_obligations(gold, result)
+            obl_hit, obl_total, false_met = obl_hit + hit, obl_total + len(gold), false_met + wrong
+        obl = f"obl={hit}/{len(gold)} false_met={wrong}" if gold else "obl=n/a"
         with LOG.open("a", encoding="utf-8") as f:
             for s in searches:
                 f.write(json.dumps({"case": case["name"], "query": s["query"], "ids": s["ids"]}, ensure_ascii=False) + "\n")
@@ -62,11 +93,13 @@ def main(names: list[str]) -> int:
                   "role": case.get("expected_role") in (None, a["role"])}
         failures += not all(checks.values())
         print(f"{case['name']:30} tier={a['risk_tier']:13} gpai={a['gpai_involved']:7} ai={a['ai_system']:7} role={a['role']:8} "
-              f"supported={supported}/{len(result['verdicts'])} saw={seen}/{len(must)} searches={len(searches)} "
+              f"supported={supported}/{len(result['verdicts'])} saw={seen}/{len(must)} {obl} searches={len(searches)} "
               f"revised={result['revised']} calls={len(calls)} {time.monotonic() - started:.0f}s "
               f"{'PASS' if all(checks.values()) else 'FAIL ' + str([k for k, ok in checks.items() if not ok])}", flush=True)
     if must_total:
         print(f"must-see provisions found by the Assessor's own searches: {seen_total}/{must_total}")
+    if obl_total:
+        print(f"gold obligations covered: {obl_hit}/{obl_total}; gap/unclear marked met: {false_met}")
     return failures
 
 
