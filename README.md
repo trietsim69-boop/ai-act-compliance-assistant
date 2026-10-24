@@ -15,7 +15,7 @@ Decision support only. It is not legal advice and does not certify compliance.
 5. **One revision.** If a quote or verdict failed, the Assessor gets the feedback once and the result is checked again.
 6. **Report.** `src/report.py` turns the result into display sections and warnings without any model call; the UI renders it, with the exact quoted span highlighted in each source.
 
-The model is DeepSeek (`deepseek-chat`) through its OpenAI-compatible API; any compatible endpoint works via `LLM_BASE_URL` / `LLM_MODEL`.
+The model is DeepSeek (`deepseek-flash`, thinking off) through its OpenAI-compatible API; any compatible endpoint works via `LLM_BASE_URL` / `LLM_MODEL`.
 
 ## Built-in corpus
 
