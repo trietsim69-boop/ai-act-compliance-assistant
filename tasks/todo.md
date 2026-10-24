@@ -16,8 +16,9 @@ Commands (on `testing`): `python -m pytest -q` (offline), `python -m evals.retri
 ### Task 1: Score obligations in `evals.cases`
 **Description:** `evals/cases.py` gains two metrics so the old and new pipelines can be compared. Obligation recall is gold articles ∩ articles cited by the requirements' claims, at article level (`eu_ai_act/art-26/…` → 26). False "met" counts requirements marked `met` where the gold status is `gap` or `unclear`. A case lists `expected_obligations: [{"article": "26", "status": "gap"|"met"|"unclear"|"any"}]`; cases without it print `n/a`.
 **Acceptance criteria:**
-- [ ] Each case row prints `obl=x/y` and `false_met=n`; the run ends with totals.
-- [ ] The old pipeline's results are scored without changing `src/` (articles come from the requirement → claim → reference chain).
+- [x] Each case row prints `obl=x/y` and `false_met=n`; the run ends with totals.
+- [x] The old pipeline's results are scored without changing `src/` (articles come from the requirement → claim → reference chain).
+- Done 2026-10-24 (`c5b1f12` on `testing`); unit-checked with a fake result, live output first seen in Task 4.
 **Verification:** a fake run on a hand-made result (monkeypatched `assess_case`) prints the expected numbers; `pytest` passes.
 **Dependencies:** none. **Files:** `evals/cases.py`. **Scope:** S
 
@@ -77,9 +78,10 @@ Record the source URL and licence for each case in `cases.json`.
 ### Task 6: Question bank
 **Description:** `src/rules.py` holds the questions as Python data: id, group (A–H plus deployer type), question text, gating flag, and the passage id(s) of its legal test. Cover the Q5 additions: Art 5 exceptions, deployer type, Art 2 open-source and pre-market exclusions, Art 25. Article numbers are checked against the consolidated text in `corpus/eu_ai_act.md`, Omnibus included.
 **Acceptance criteria:**
-- [ ] Every passage id exists in `law.corpus()` (test).
-- [ ] Every Art 5(1) point and every Annex III point has a question.
-- [ ] A function renders the questions with their legal-test text read from the corpus, never copied into code.
+- [x] Every anchor resolves to exactly one passage under its heading (`tests/test_rules.py`); anchors instead of hand-numbered passage ids.
+- [x] Every Art 5(1) point and every Annex III point has a question.
+- [x] A function renders the questions with their legal-test text read from the corpus, never copied into code.
+- Done 2026-10-24 (`5b4f495`): 69 questions, 38 legal passages, ~46k chars rendered; review the question wording at Checkpoint B.
 **Verification:** `pytest tests/test_rules.py` on `testing`.
 **Dependencies:** none (can start alongside Phase 0). **Files:** `src/rules.py`, `tests/test_rules.py`. **Scope:** M
 
