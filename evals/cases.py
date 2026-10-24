@@ -33,6 +33,8 @@ def obligations(result: dict) -> dict[str, set[str]]:
     claims = {c["id"]: c for c in a["claims"]}
     found: dict[str, set[str]] = {}
     for r in a["requirements"]:
+        if r["status"] == "not_applicable":  # saying it does not apply is not covering it
+            continue
         quoted = [ref["chunk_id"] for i in r["claim_ids"] for ref in claims.get(i, {}).get("references", [])]
         articles = {i.split("/")[1].removeprefix("art-") for i in quoted if i.startswith(f"{law.ACT}/art-")}
         for article in articles | set(_NAMED.findall(f"{r['requirement']} {r['explanation']}")):

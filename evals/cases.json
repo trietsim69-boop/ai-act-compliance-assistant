@@ -24,7 +24,22 @@
     ],
     "must_see": [
       "AI systems intended to be used for the recruitment or selection of natural persons"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "any"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 4(a) recruitment; deployer (vendor develops)"
   },
   {
     "name": "customer_chatbot",
@@ -50,7 +65,18 @@
     ],
     "must_see": [
       "Providers shall ensure that AI systems intended to interact directly with natural persons"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "50",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 50(1) chatbot; notice only drafted"
   },
   {
     "name": "workplace_emotion_detection",
@@ -76,7 +102,14 @@
     ],
     "must_see": [
       "to infer emotions of a natural person in the areas of workplace and education institutions"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "5",
+        "status": "gap"
+      }
+    ],
+    "note": "Art 5(1)(f) emotion inference at work, no medical/safety purpose"
   },
   {
     "name": "spam_filter",
@@ -95,7 +128,14 @@
     ],
     "must_see": [
       "means a machine-based system that is designed to operate with varying levels of autonomy"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "minimal risk; Art 4 only"
   },
   {
     "name": "llm_report_generator",
@@ -117,7 +157,14 @@
     ],
     "must_see": [
       "public authority, agency or other body using an AI system under its authority except where"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "downstream GPAI use, no Art 53 duties; Art 50(2) arguable so left out"
   },
   {
     "name": "predictive_maintenance",
@@ -135,7 +182,14 @@
     ],
     "must_see": [
       "intended to be used as a safety component of a product"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "not a safety component on the documents; Art 4 only"
   },
   {
     "name": "exam_proctoring",
@@ -156,7 +210,62 @@
     "expected_role": "provider",
     "must_see": [
       "monitoring and detecting prohibited behaviour of students during tests"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 3(d); provider"
   },
   {
     "name": "university_admissions",
@@ -177,7 +286,22 @@
     "expected_role": "deployer",
     "must_see": [
       "to determine access or admission or to assign natural persons to educational and vocational training institutions"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "gap"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 3(a); deployer; low scores never reach a human (26(2))"
   },
   {
     "name": "consumer_credit_scoring",
@@ -198,7 +322,74 @@
     "expected_role": "both",
     "must_see": [
       "to evaluate the creditworthiness of natural persons or establish their credit score"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "26",
+        "status": "gap"
+      },
+      {
+        "article": "27",
+        "status": "unclear"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 5(b); both; Art 27 applies to 5(b) deployers; automatic declines"
   },
   {
     "name": "life_insurance_pricing",
@@ -219,7 +410,26 @@
     "expected_ai_system": "yes",
     "must_see": [
       "risk assessment and pricing in relation to natural persons in the case of life and health insurance"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "unclear"
+      },
+      {
+        "article": "27",
+        "status": "unclear"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 5(c); deployer duties; provider role contested"
   },
   {
     "name": "retail_face_matching",
@@ -240,7 +450,18 @@
     "expected_role": "deployer",
     "must_see": [
       "This shall not include AI systems intended to be used for biometric verification the sole purpose of which is to confirm"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 1(a) remote biometric identification; deployer; not law enforcement"
   },
   {
     "name": "deepfake_marketing",
@@ -259,7 +480,18 @@
     "expected_role": "deployer",
     "must_see": [
       "constituting a deep fake, shall disclose that the content has been artificially generated or manipulated"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "50",
+        "status": "gap"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 50(4) deep fake; labelling undecided"
   },
   {
     "name": "medical_imaging_triage",
@@ -279,7 +511,62 @@
     "expected_role": "provider",
     "must_see": [
       "is required to undergo a third-party conformity assessment"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "any"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 6(1) + Annex I MDR, notified body; provider"
   },
   {
     "name": "invoice_rules_engine",
@@ -297,7 +584,9 @@
     "expected_ai_system": "no",
     "must_see": [
       "means a machine-based system that is designed to operate with varying levels of autonomy"
-    ]
+    ],
+    "expected_obligations": [],
+    "note": "not an AI system (fixed human-written rules)"
   },
   {
     "name": "municipal_social_scoring",
@@ -317,7 +606,14 @@
     "expected_role": "deployer",
     "must_see": [
       "the evaluation or classification of natural persons or groups of persons over a certain period of time based on their social behaviour"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "5",
+        "status": "gap"
+      }
+    ],
+    "note": "Art 5(1)(c) social scoring"
   },
   {
     "name": "smart_toy_challenges",
@@ -337,7 +633,14 @@
     "expected_role": "provider",
     "must_see": [
       "exploits any of the vulnerabilities of a natural person or a specific group of persons due to their age"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "5",
+        "status": "gap"
+      }
+    ],
+    "note": "Art 5(1)(b) exploiting children's age"
   },
   {
     "name": "predictive_policing_profiles",
@@ -357,7 +660,14 @@
     "expected_role": "provider",
     "must_see": [
       "to assess or predict the risk of a natural person committing a criminal offence, based solely on the profiling of a natural person"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "5",
+        "status": "gap"
+      }
+    ],
+    "note": "Art 5(1)(d) crime prediction from profiling alone"
   },
   {
     "name": "emergency_call_triage",
@@ -378,7 +688,18 @@
     "expected_role": "deployer",
     "must_see": [
       "to evaluate and classify emergency calls by natural persons"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "gap"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 5(d); deployer; no monitoring since installation (26(5))"
   },
   {
     "name": "gig_task_allocation",
@@ -399,7 +720,70 @@
     "expected_role": "both",
     "must_see": [
       "to allocate tasks based on individual behaviour or personal traits or characteristics"
-    ]
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "26",
+        "status": "gap"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 4(b); both; couriers not informed (26(11)), automatic deactivation"
   },
   {
     "name": "customer_call_emotion",
@@ -419,6 +803,354 @@
     "expected_role": "deployer",
     "must_see": [
       "AI systems intended to be used for emotion recognition"
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "unclear"
+      },
+      {
+        "article": "50",
+        "status": "gap"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 1(c) emotion recognition; deployer; customers not told (50(3))"
+  },
+  {
+    "name": "cv_parser_procedural",
+    "expected_risk_tier": "minimal_risk",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "should_ask_about": [],
+    "must_see": [
+      "the AI system is intended to perform a narrow procedural task"
+    ],
+    "expected_obligations": [
+      {
+        "article": "6",
+        "status": "any"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 4(a) but Art 6(3)(a) narrow procedural task, no profiling; Art 6(4) record + 49(2) registration",
+    "documents": [
+      {
+        "name": "cv_parser_procedural.md",
+        "text": "# ParseRight — product sheet\n\nParseRight converts CVs that applicants upload as PDF or Word files into structured fields (name, contact details, work history, education, languages) for the employer's applicant tracking system. It uses a machine-learning layout model trained on annotated CVs to find the fields. ParseRight does not score, rank, filter or compare applicants and gives no recommendation; recruiters read every application themselves. We develop ParseRight and sell it to employers in the EU under our own brand."
+      }
+    ]
+  },
+  {
+    "name": "cv_ranking_profiling",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "should_ask_about": [],
+    "must_see": [
+      "shall always be considered to be high-risk where the AI system performs profiling of natural persons"
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 4(a); profiling of applicants overrides any Art 6(3) claim",
+    "documents": [
+      {
+        "name": "cv_ranking_profiling.md",
+        "text": "# FitScore — product sheet\n\nFitScore predicts each applicant's future job performance from their CV, an online personality questionnaire and their answers to video interview questions, and ranks applicants by the predicted score. Our sales material calls it a 'preparatory tool', because recruiters make the final decision. We develop FitScore and sell it to employers in the EU under our own brand."
+      }
+    ]
+  },
+  {
+    "name": "control_room_distress_safety",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "should_ask_about": [],
+    "must_see": [
+      "except where the use of the AI system is intended to be put in place or into the market for medical or safety reasons"
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "unclear"
+      },
+      {
+        "article": "50",
+        "status": "met"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 5(1)(f) safety exception, so not prohibited; still Annex III 1(c) emotion recognition; 50(3) informing done",
+    "documents": [
+      {
+        "name": "control_room_distress_safety.md",
+        "text": "# Control room distress monitor — Rhine Chemicals plant\n\nIn the plant's central control room a camera-and-voice system from a vendor infers acute distress or panic of the operators on shift and, when it detects it, triggers the emergency procedure and calls the shift supervisor. Its only purpose is process safety: a panicking operator during an incident can cause an explosion. Results are not stored or used for performance reviews. Every operator was informed in writing about the system and how it works before it was switched on. The vendor provides the model; the plant operates it."
+      }
+    ]
+  },
+  {
+    "name": "university_emotion_research",
+    "expected_risk_tier": "out_of_scope",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "should_ask_about": [],
+    "must_see": [
+      "specifically developed and put into service for the sole purpose of scientific research and development"
+    ],
+    "expected_obligations": [],
+    "note": "Art 2(6) sole purpose of scientific research and development",
+    "documents": [
+      {
+        "name": "university_emotion_research.md",
+        "text": "# Project note — Affective Computing Lab, University of Tartu\n\nThe lab trains a facial-expression model to study how well emotion recognition generalises across cultures. The model is used only by the research team on consented laboratory recordings and published datasets. It is not offered to anyone, not used outside the lab and not part of any product; results are published as papers."
+      }
+    ]
+  },
+  {
+    "name": "us_only_tenant_screening",
+    "expected_risk_tier": "out_of_scope",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "both",
+    "should_ask_about": [],
+    "must_see": [
+      "where the output produced by the AI system is used in the Union"
+    ],
+    "expected_obligations": [],
+    "note": "Art 2(1): provider and deployer outside the EU, output not used in the EU",
+    "documents": [
+      {
+        "name": "us_only_tenant_screening.md",
+        "text": "# TenantCheck — internal overview, Austin, Texas\n\nTenantCheck is a machine-learning model that scores rental applicants for the apartment buildings our company owns in Texas and Oklahoma. We developed it ourselves and use it only for our own US properties; applicants, staff and servers are all in the United States, and the scores are not used anywhere else."
+      }
+    ]
+  },
+  {
+    "name": "white_label_hiring",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "should_ask_about": [],
+    "must_see": [
+      "they put their name or trademark on a high-risk AI system already placed on the market"
+    ],
+    "expected_obligations": [
+      {
+        "article": "9",
+        "status": "unclear"
+      },
+      {
+        "article": "10",
+        "status": "unclear"
+      },
+      {
+        "article": "11",
+        "status": "unclear"
+      },
+      {
+        "article": "12",
+        "status": "unclear"
+      },
+      {
+        "article": "13",
+        "status": "unclear"
+      },
+      {
+        "article": "14",
+        "status": "unclear"
+      },
+      {
+        "article": "15",
+        "status": "unclear"
+      },
+      {
+        "article": "17",
+        "status": "unclear"
+      },
+      {
+        "article": "43",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "72",
+        "status": "unclear"
+      },
+      {
+        "article": "73",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 25(1)(a): rebranding a high-risk system makes the agency its provider",
+    "documents": [
+      {
+        "name": "white_label_hiring.md",
+        "text": "# StaffNow Select — reseller agreement summary\n\nStaffNow, a recruitment agency, licenses a candidate-ranking system that SkillMatch Ltd already sells in the EU. StaffNow offers it to its client companies under the name 'StaffNow Select', with StaffNow's logo and no mention of SkillMatch. The system ranks applicants for open positions so that client recruiters review the top candidates first. The agreement does not say who carries the AI Act obligations."
+      }
+    ]
+  },
+  {
+    "name": "welfare_fraud_risk_score",
+    "expected_risk_tier": "high_risk",
+    "expected_gpai": "no",
+    "expected_ai_system": "yes",
+    "expected_role": "deployer",
+    "should_ask_about": [],
+    "must_see": [
+      "to evaluate the eligibility of natural persons for essential public assistance benefits and services"
+    ],
+    "expected_obligations": [
+      {
+        "article": "26",
+        "status": "unclear"
+      },
+      {
+        "article": "27",
+        "status": "unclear"
+      },
+      {
+        "article": "49",
+        "status": "unclear"
+      },
+      {
+        "article": "86",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Annex III 5(a); public-body deployer: Art 27 rights assessment and Art 49(3) registration; profiling, no Art 6(3)",
+    "documents": [
+      {
+        "name": "welfare_fraud_risk_score.md",
+        "text": "# Social assistance — risk-based checks, Municipality of Gent-Noord\n\nThe social services department uses a machine-learning model bought from a software vendor that scores every new application for social assistance benefits on the risk that it is incorrect, using the applicant's household, income, assets and earlier benefits. High-scoring applications are investigated by an enforcement officer before benefits are granted; the others are processed normally. Applicants are not told about the score."
+      }
+    ]
+  },
+  {
+    "name": "email_writer_on_llm",
+    "expected_risk_tier": "limited_risk",
+    "expected_gpai": "yes",
+    "expected_ai_system": "yes",
+    "expected_role": "provider",
+    "should_ask_about": [],
+    "must_see": [
+      "generating synthetic audio, image, video or text content"
+    ],
+    "expected_obligations": [
+      {
+        "article": "50",
+        "status": "unclear"
+      },
+      {
+        "article": "4",
+        "status": "unclear"
+      }
+    ],
+    "note": "Art 50(2) synthetic text marking for the provider; downstream GPAI user, no Art 53 duties",
+    "documents": [
+      {
+        "name": "email_writer_on_llm.md",
+        "text": "# MailCraft — product brief\n\nMailCraft turns a few bullet points into complete sales emails that users send from their own mailbox. It calls a third-party large language model through its API; we do not train or modify the model. We built MailCraft and sell it under our own brand to small businesses in the EU. Generated emails are not marked as AI-generated in any way at the moment."
+      }
+    ]
+  },
+  {
+    "name": "sales_dashboard_statistics",
+    "expected_risk_tier": null,
+    "expected_gpai": "no",
+    "expected_ai_system": "no",
+    "expected_role": null,
+    "should_ask_about": [],
+    "must_see": [
+      "Basic data processing system refers to a system that follows predefined, explicit instructions or operations"
+    ],
+    "expected_obligations": [],
+    "note": "not an AI system: descriptive statistics and visualisation (AI system guidelines, basic data processing)",
+    "documents": [
+      {
+        "name": "sales_dashboard_statistics.md",
+        "text": "# Sales dashboard — specification\n\nThe dashboard shows total and average sales per region and month from the ERP database, and highlights a region in red when its monthly sales are more than 20% below its 12-month average. The thresholds were set by the sales director. There is no forecasting, model training or prediction; it only computes sums, averages and the fixed threshold rule."
+      }
     ]
   }
 ]
