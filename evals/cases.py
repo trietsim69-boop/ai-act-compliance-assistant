@@ -1,6 +1,7 @@
 """Run the live pipeline on evals/cases.json and compare with expectations. Needs DEEPSEEK_API_KEY (costs credit).
 
-    python -m evals.cases [case_name ...]
+    python -m evals.cases [case_name ...]           # live run, then the metrics below
+    python -m evals.cases --score [case_name ...]   # metrics from the saved results again, no API calls (e.g. after a gold change)
 
 Besides tier / GPAI / AI system / role, `saw` is how many of a case's `must_see` provisions the model was shown (the
 questions' legal tests and the cited obligation provisions). Each full result is saved to data/eval_results/<case>.json
@@ -50,6 +51,70 @@ def score_obligations(gold: list[dict], result: dict) -> tuple[int, int]:
             sum(o["status"] in ("gap", "unclear") and "met" in found.get(o["article"], ()) for o in gold))
 
 
+RESULTS = ROOT / "data" / "eval_results"  # git-ignored
+RANK = ["out_of_scope", "minimal_risk", "limited_risk", "high_risk", "prohibited"]  # ascending severity
+FIELDS = {"risk_tier": "expected_risk_tier", "ai_system": "expected_ai_system", "gpai_involved": "expected_gpai",
+          "role": "expected_role"}
+
+
+def report(scored: list[tuple]) -> dict:
+    """Metrics for a compliance assistant over (case, result, seconds or None, cost or None); printed and returned.
+
+    Under-calling the tier is the dangerous error (fewer duties than the law imposes), so it is counted apart from
+    over-calling, with how many under-calls a could-be warning still flagged. False met = claiming compliance the
+    documents do not show. Calibration = share of fully correct cases per confidence level."""
+    pct = lambda a, b: f"{a}/{b} ({a / b:.0%})" if b else "n/a"  # noqa: E731
+    ok = lambda c, r: all(c.get(k) in (None, r["assessment"][f]) for f, k in FIELDS.items())  # noqa: E731
+    m = {"all checks": pct(sum(ok(c, r) for c, r, *_ in scored), len(scored))}
+    for field, key in FIELDS.items():
+        rows = [(c[key], r["assessment"][field]) for c, r, *_ in scored if c.get(key) is not None]
+        m[field] = pct(sum(g == p for g, p in rows), len(rows))
+    tiers = [(c["expected_risk_tier"], r["assessment"]["risk_tier"], (r.get("decision") or {}).get("could_be"))
+             for c, r, *_ in scored if c.get("expected_risk_tier")]
+    under = [(g, cb) for g, p, cb in tiers if p in RANK and RANK.index(p) < RANK.index(g)]
+    m["tier under-called"] = pct(len(under), len(tiers))
+    m["  under-calls flagged by could-be"] = pct(sum(cb in RANK and RANK.index(cb) >= RANK.index(g) for g, cb in under), len(under))
+    m["tier over-called"] = pct(sum(p in RANK and RANK.index(p) > RANK.index(g) for g, p, _ in tiers), len(tiers))
+    m["tier unclear"] = pct(sum(p not in RANK for _, p, _ in tiers), len(tiers))
+    m["tier recall"] = ", ".join(f"{t} {pct(sum(g == p for g, p, _ in tiers if g == t), sum(g == t for g, *_ in tiers))}"
+                                 for t in RANK if any(g == t for g, *_ in tiers))
+    tp = fn = fp = agree = rated = false_met = negative = 0
+    for c, r, *_ in scored:
+        if "expected_obligations" not in c:
+            continue
+        found, gold = obligations(r), {o["article"]: o["status"] for o in c["expected_obligations"]}
+        tp, fn, fp = tp + len(gold.keys() & found.keys()), fn + len(gold.keys() - found.keys()), fp + len(found.keys() - gold.keys())
+        for art, s in gold.items():
+            rated += art in found and s != "any"
+            agree += art in found and s != "any" and s in found[art]
+            negative += s in ("gap", "unclear")
+            false_met += s in ("gap", "unclear") and "met" in found.get(art, ())
+    recall, precision = tp / (tp + fn) if tp + fn else 0, tp / (tp + fp) if tp + fp else 0
+    m["obligation recall"], m["obligation precision"] = pct(tp, tp + fn), pct(tp, tp + fp)
+    m["obligation F1"] = f"{2 * recall * precision / (recall + precision):.0%}" if recall + precision else "n/a"
+    m["status agreement"], m["false met"] = pct(agree, rated), pct(false_met, negative)
+    levels = {}
+    for c, r, *_ in scored:
+        levels.setdefault(r["assessment"]["confidence"], []).append(ok(c, r))
+    m["calibration (correct by confidence)"] = ", ".join(f"{k} {pct(sum(v), len(v))}" for k, v in sorted(levels.items()))
+    verdicts = {(id(r), v["claim_id"]): v["status"] for _, r, *_ in scored for v in r["verdicts"]}
+    claims = [(id(r), cl) for _, r, *_ in scored for cl in r["assessment"]["claims"]]
+    m["claims verified"] = pct(sum(verdicts.get((i, cl["id"])) == "supported" and bool(cl["references"]) for i, cl in claims), len(claims))
+    m["questions shown per case"] = f"{sum(len(r['assessment']['missing_information']) for _, r, *_ in scored) / len(scored):.1f}"
+    secs = sorted(s for *_, s, _ in scored if s is not None)
+    if secs:
+        m["time median / max"] = f"{secs[len(secs) // 2]:.0f} s / {secs[-1]:.0f} s (limit 300 s)"
+        m["cost at peak rates"] = f"${sum(c for *_, c in scored):.4f}"
+    print("\n".join(f"{k:36} {v}" for k, v in m.items()))
+    return m
+
+
+def rescore(names: list[str]) -> None:
+    """The metrics again from the saved results, without API calls."""
+    report([(c, json.loads((RESULTS / f"{c['name']}.json").read_text(encoding="utf-8")), None, None)
+            for c in CASES if (not names or c["name"] in names) and (RESULTS / f"{c['name']}.json").exists()])
+
+
 # USD per million tokens, deepseek-flash at peak (off-peak is half); api-docs.deepseek.com pricing, 2026-10-24
 PRICE = {"prompt_cache_hit_tokens": 0.006, "prompt_cache_miss_tokens": 0.3, "completion_tokens": 1.2}
 
@@ -68,7 +133,8 @@ def main(names: list[str]) -> int:
         return reply
     completions.create = counted
 
-    failures = seen_total = must_total = obl_hit = obl_total = false_met = cost_total = 0
+    failures = seen_total = must_total = 0
+    scored = []
     for case in CASES:
         if names and case["name"] not in names:
             continue
@@ -92,13 +158,12 @@ def main(names: list[str]) -> int:
         gold = case.get("expected_obligations")
         if gold:
             hit, wrong = score_obligations(gold, result)
-            obl_hit, obl_total, false_met = obl_hit + hit, obl_total + len(gold), false_met + wrong
         obl = f"obl={hit}/{len(gold)} false_met={wrong}" if gold else "obl=n/a"
         tokens = {k: sum(u[k] for u in usage) for k in PRICE}
         cost = sum(tokens[k] * PRICE[k] for k in PRICE) / 1e6
-        cost_total += cost
         spent = f"tokens hit/miss/out={'/'.join(f'{v:,}' for v in tokens.values())} ${cost:.4f}"
-        saved = ROOT / "data" / "eval_results" / f"{case['name']}.json"  # git-ignored
+        scored.append((case, result, time.monotonic() - started, cost))
+        saved = RESULTS / f"{case['name']}.json"
         saved.parent.mkdir(parents=True, exist_ok=True)
         saved.write_text(json.dumps(result, indent=1, ensure_ascii=False), encoding="utf-8")
         checks = {"tier": case["expected_risk_tier"] in (None, a["risk_tier"]),
@@ -112,11 +177,14 @@ def main(names: list[str]) -> int:
               f"{'PASS' if all(checks.values()) else 'FAIL ' + str([k for k, ok in checks.items() if not ok])}", flush=True)
     if must_total:
         print(f"must-see provisions shown to the model: {seen_total}/{must_total}")
-    if obl_total:
-        print(f"gold obligations covered: {obl_hit}/{obl_total}; gap/unclear marked met: {false_met}")
-    print(f"cost at peak rates: ${cost_total:.4f}")
+    if scored:
+        print()
+        report(scored)
     return failures
 
 
 if __name__ == "__main__":
-    raise SystemExit(main(sys.argv[1:]))
+    if sys.argv[1:2] == ["--score"]:
+        rescore(sys.argv[2:])
+    else:
+        raise SystemExit(main(sys.argv[1:]))
