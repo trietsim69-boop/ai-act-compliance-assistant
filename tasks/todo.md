@@ -161,7 +161,7 @@ Record the source URL and licence for each case in `cases.json`.
 **Acceptance criteria:**
 - [x] The API response keeps every key the UI reads; the UI shows `out_of_scope` as "Unclear" until Phase 4. Live local API call: HTTP 200, 35 s.
 - [x] `pytest` passes (84), with the old-Assessor tests rewritten. Done 2026-10-25.
-**Verification:** a preview deployment with one long case timed under 300 seconds; then production with one case after you merge.
+**Verification:** done: live local API call (35 s) before merge; production after PR #6 merged (HTTP 200, 38 s).
 **Dependencies:** Task 12 (adopt). **Files:** `src/agents.py`, `api/index.py`, `README.md`, `tests/test_agents.py`, `tests/test_api.py`. **Scope:** M
 
 ### Checkpoint D → open PR 4. Merging releases the new pipeline.

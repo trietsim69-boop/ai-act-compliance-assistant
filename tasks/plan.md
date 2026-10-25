@@ -150,3 +150,21 @@ Fixes between tree runs, all general (no case wording): unknown A1 assumed and a
 
 Bar (Q15): tier 0 vs 2 ✓, role 1 vs 1 ✓, GPAI 2 vs 8 ✓, obligations 95.2% ≥ 90% ✓, cost 0.49× ✓, slowest 47 s < 300 s ✓; false met 1 > 0 ✗ unless the Amsterdam Art 4 gold is corrected (user's call).
 Remaining misses: public body not recognised for municipalities (welfare_fraud_risk_score, amsterdam_slimme_check: Art 27 / 49(3)); CV parsing not treated as Annex III 4(a), so no Art 6(4)/49(2) rows; in-house chatbot on a third-party LLM read as deployer (Art 50(1) missed).
+
+## Metrics: both full runs re-scored against today's gold (2026-10-25, offline from data/eval_results/)
+| Metric | Old (free Assessor) | Decision tree |
+|---|---|---|
+| All four checks correct | 24/33 (73%) | 30/33 (91%) |
+| Risk tier / AI system / GPAI / role | 93% / 96% / 53% / 95% | 100% / 100% / 88% / 95% |
+| Obligation recall | 127/145 (87.6%) | 138/145 (95.2%) |
+| Obligation precision (vs key-obligation gold, pessimistic for the old pipeline) | 127/286 (44.4%) | 138/153 (90.2%) |
+| Obligation F1 | 58.9% | 92.6% |
+| Status agreement (covered, gold not "any") | 79/120 (66%) | 117/133 (88%) |
+| False met | 1/137 | 0/137 |
+| Open questions per case | 6.2 | 1.0 |
+| Confidence high / medium / low | 0 / 16 / 17 | 12 / 12 / 9 |
+| Time median / max | 48 s / 72 s | 33 s / 47 s |
+| Cost per run (peak) | $1.10 | $0.54 |
+
+Long documents only (4): all four checks 2/4 → 4/4; recall 86.4% → 90.9%; precision 47.5% → 100%; status agreement 13/15 → 13/17 (Dutch documents); open questions 6.5 → 0.5.
+Production after PR #6: live call HTTP 200 in 38 s (in-house credit scoring: high-risk, both, 16 obligations, no warnings).
