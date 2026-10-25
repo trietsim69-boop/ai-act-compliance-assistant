@@ -133,3 +133,20 @@ First run: every answer unmatched (the model echoed "A1: <question text>" as the
 | False met | amsterdam_slimme_check | likely Art 4 met (staff training documented): gold may be wrong |
 
 Bar so far: long cases < 300 s ✓, cost ✓; obligation recall 86.7% < 90%, false met 1 > 0; accuracy vs old pending (old run 2026-10-25).
+
+## Task 12: comparison (2026-10-24/25, `deepseek-flash`, thinking off, all 33 cases)
+Fixes between tree runs, all general (no case wording): unknown A1 assumed and asked (like A3); "no" = nothing in the documents indicates it, with a tree Verifier that accepts a description as ruling a question out; output cap 32k tokens (the ~8k default truncated the questionnaire); deployer question says selling or hosting for customers is not use; GPAI "no" when the system's own model is not general-purpose. Gold changed by user decision: GOV.UK Chat in scope (limited risk).
+
+| | Old (free Assessor) | Tree run 1 | Tree run 2 | Tree run 3 | **Tree final** |
+|---|---|---|---|---|---|
+| Pass | 24/33 | 23/33 | 25/33 | 28/32 + 1 crash | **30/33** |
+| Failed checks | gpai 8, tier 2, role 1, ai 1 | gpai 8, tier 4, ai 3, role 2 | gpai 6, role 4, ai 1 | gpai 2, role 3 | **gpai 2, role 1** |
+| Obligations covered | 127/145 (87.6%) | 124/143 (86.7%) | 138/145 (95.2%) | 139/144 (96.5%) | **138/145 (95.2%)** |
+| Gap/unclear marked met | 2 | 1 | 1 | 1 | **1** (Amsterdam Art 4: staff training documented, gold may be wrong) |
+| Open questions mean / max | – | – | 5.1 / 37 | 1.0 / 5 | **1.0 / 4** |
+| Low confidence | – | – | 20/33 | 7/33 | **9/33** |
+| Slowest case | 72 s | 39 s | 43 s | 51 s | **47 s** |
+| Cost at peak rates | $1.10 | $0.49 | $0.42 | $0.59 | **$0.54** |
+
+Bar (Q15): tier 0 vs 2 ✓, role 1 vs 1 ✓, GPAI 2 vs 8 ✓, obligations 95.2% ≥ 90% ✓, cost 0.49× ✓, slowest 47 s < 300 s ✓; false met 1 > 0 ✗ unless the Amsterdam Art 4 gold is corrected (user's call).
+Remaining misses: public body not recognised for municipalities (welfare_fraud_risk_score, amsterdam_slimme_check: Art 27 / 49(3)); CV parsing not treated as Annex III 4(a), so no Art 6(4)/49(2) rows; in-house chatbot on a third-party LLM read as deployer (Art 50(1) missed).
