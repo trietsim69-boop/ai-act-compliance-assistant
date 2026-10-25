@@ -88,6 +88,8 @@ def test_tree_pipeline_rates_only_listed_obligations_and_fails_closed(monkeypatc
     legal = next(c for c in a["claims"] if c["id"] == "L50.1")["references"][0]
     assert legal["start"] is not None and legal["chunk_id"] in result["sources"]
     assert len(calls) == 4  # questionnaire, verifier, status, verifier
+    asked = [q["question"] for q in a["missing_information"]]  # most questions unanswered: one description request
+    assert asked[0] == agents.DESCRIBE and len(asked) <= 1 + len(agents.GATING)
     report = build_report(result, [])
     assert report["decision"]["risk_tier"] == "limited_risk" and report["requirements"][0]["unverified"] is False
 
