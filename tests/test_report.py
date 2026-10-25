@@ -36,3 +36,8 @@ def test_clean_result_has_no_warnings_and_missing_verdicts_count_as_insufficient
 
 def test_free_assessor_results_have_no_decision(result):
     assert build_report(result, [])["decision"] is None
+
+
+def test_a_possible_higher_tier_is_a_warning(result):
+    result["decision"] = {"could_be": "prohibited"}
+    assert "This could be prohibited: answer the open questions before relying on the risk tier." in build_report(result, [])["warnings"]

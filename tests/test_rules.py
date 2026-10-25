@@ -143,3 +143,11 @@ def test_every_obligation_anchor_finds_exactly_one_passage():
 def test_obligations_follow_tier_role_and_triggers(changed, has, lacks):
     ids = table(**changed)
     assert has <= ids and not (lacks & ids), ids
+
+
+def test_personal_use_keeps_the_system_in_scope_but_drops_the_users_duties():
+    d = run(A7="yes", G4="yes", C3="not_mentioned")  # a private person making deep fakes; intimate content unknown
+    assert (d["risk_tier"], d["could_be"]) == ("limited_risk", "prohibited") and "C3" in d["open_questions"]
+    assert table(A7="yes", G4="yes") == set()                       # no deployer duties for personal use (Art 2(10))
+    assert table(A7="yes", C5="yes") == {"5"}                       # a prohibition still says stop
+    assert "4" in table(A7="yes", B1="yes")                         # the provider keeps its duties
