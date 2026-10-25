@@ -29,8 +29,8 @@ Guidance is non-binding; the UI labels every citation as your document, the AI A
 
 Measured on 33 reference cases (20 short cases, 9 borderline cases, and 4 long real documents of up to 192,000 characters), with expected answers read from the Act:
 
-- **Classification:** 30 of 33 correct on risk tier, AI-system status, general-purpose AI involvement and role, against 24 of 33 for the earlier free-form assessor on the same cases.
-- **Obligations:** 95% of the obligations the cases trigger are listed (earlier assessor: 88%).
+- **Risk tier:** correct in 29 of 29 cases that have one, never lower than the law requires; all checks (tier, AI-system status, general-purpose AI, role) correct in 29 of 33, against 24 of 33 for the earlier free-form assessor.
+- **Obligations:** 97% of the obligations the cases trigger are listed, and 90% of those listed are expected (earlier assessor: 88% and 44%); no obligation is marked met that the documents do not show.
 - **Speed and cost:** about 30 seconds per case and under 50 seconds for the longest documents; about half the cost of the earlier assessor.
 - **Search benchmark:** the corpus search (`src/law.py`, used by the retrieval evals and kept for a follow-up chat) returns the right article in its top 12 for 87.1% of 171 independent questions from two other projects ([AI Act Evaluation Benchmark](https://github.com/davidath/ai-act-evaluation-benchmark), [ActLens](https://github.com/SyedAshhadIbrar/ActLens)), never used for tuning.
 
