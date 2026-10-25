@@ -168,3 +168,18 @@ Remaining misses: public body not recognised for municipalities (welfare_fraud_r
 
 Long documents only (4): all four checks 2/4 → 4/4; recall 86.4% → 90.9%; precision 47.5% → 100%; status agreement 13/15 → 13/17 (Dutch documents); open questions 6.5 → 0.5.
 Production after PR #6: live call HTTP 200 in 38 s (in-house credit scoring: high-risk, both, 16 obligations, no warnings).
+
+## Metrics after PR 8 (2026-10-25; `python -m evals.cases --score` on the latest saved result per case: PR 8 regression + targeted rerun of 8 role-sensitive cases on the final provider wording)
+| Metric | Old (free Assessor) | Decision tree after PR 8 |
+|---|---|---|
+| All checks correct | 24/33 (73%) | 29/33 (88%) |
+| Tier correct / under-called / over-called | 93% / 0 / 2 | 100% / 0 / 0 |
+| Tier recall prohibited · high · limited · minimal · out of scope | 100 · 100 · 100 · 100 · 0% | 100% each |
+| GPAI · role | 53% · 95% | 88% · 91% |
+| Obligation recall · precision · F1 | 88% · 44% · 59% | 97% · 90% · 94% |
+| Status agreement · false met | 66% · 1/137 | 81% · 0/137 |
+| Calibration (correct by confidence) | low 59%, medium 88% | high 91%, medium 87%, low 86% (barely separates) |
+| Questions shown per case | 6.2 | 1.0 |
+
+15 everyday-language queries (PR 8 + final provider wording): 15/15 after the targeted rerun of #1 and #13; tier 13/13; obligations 17/17; "We use AI." shows 4 questions instead of 40.
+Watch: status agreement fell from 88% (tree run 3) to 81%; role is the noisiest check (GOV.UK Chat: deployer, both, provider across three runs).
