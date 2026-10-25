@@ -9,10 +9,10 @@ Decision support only. It is not legal advice and does not certify compliance.
 ## How it works
 
 1. **Ingest.** Uploads (PDF, DOCX, PPTX, HTML, CSV, TXT, MD; 4 MB total) and/or a free-text description are converted to Markdown with MarkItDown and split into citable passages (`doc1:3`). Scans without a text layer are rejected; run OCR first. Nothing is stored.
-2. **Assessor agent.** Reads the case and calls a `search_law` tool as often as it needs (SQLite FTS5/BM25 over `corpus/*.md`; everyday words are expanded with the Act's vocabulary, Act and guidance hits alternate, and provisions named in the query come first). It returns structured JSON: claims with verbatim quotes, obligations (met / gap / unclear / not applicable) and open questions.
-3. **Quote check.** Deterministic: every quote must appear verbatim in a passage the model was shown; facts must quote the case, legal claims must quote the law. Exact offsets are computed here, never taken from the model.
-4. **Verifier agent.** Judges each claim against its quoted passages: supported, contradicted or insufficient. A missing or unusable verdict counts as insufficient.
-5. **One revision.** If a quote or verdict failed, the Assessor gets the feedback once and the result is checked again.
+2. **Questionnaire.** The model answers 69 fixed questions about the case: AI-system definition and scope, role, every prohibited practice and its exception, Annex I products, every Annex III use, the Article 6(3) exception, transparency and general-purpose AI. Each question comes with its legal test from the corpus, and every yes/no answer quotes the case.
+3. **Quote check and Verifier.** Deterministic: every quote must appear verbatim in a passage the model was shown, and exact offsets are computed here, never taken from the model. A Verifier then judges each answer against its quotes. A failed answer that matters for the result gets one revision; anything still failing counts as not mentioned.
+4. **Rules.** `src/rules.py` applies the Act in code, without a model: scope, prohibited practices, Annex I, Annex III with the Article 6(3) exception, transparency, then role and general-purpose AI. It lists the obligations that follow from that tier, role and those triggers, each quoting its own provision. Unknown facts that could raise the tier become questions for you.
+5. **Obligation status.** A second call rates each listed obligation (met / gap / unclear / not applicable) with quotes from your documents and writes the summary. It cannot add or remove obligations, and a "met" without a verified quote becomes unclear.
 6. **Report.** `src/report.py` turns the result into display sections and warnings without any model call; the UI renders it, with the exact quoted span highlighted in each source.
 
 The model is DeepSeek (`deepseek-flash`, thinking off) through its OpenAI-compatible API; any compatible endpoint works via `LLM_BASE_URL` / `LLM_MODEL`.
@@ -27,14 +27,18 @@ Guidance is non-binding; the UI labels every citation as your document, the AI A
 
 ## Quality
 
-- **Retrieval in the live app:** in 20 reference cases, the Assessor's own searches found the key provision each case needed in 19 of 20 (95%).
-- **Retrieval benchmark:** on 171 independent questions from two other projects ([AI Act Evaluation Benchmark](https://github.com/davidath/ai-act-evaluation-benchmark), [ActLens](https://github.com/SyedAshhadIbrar/ActLens)), never used for tuning, search returns the right article in its top 12 (what the Assessor sees per search) for 87.1%.
-- **Live assessments:** 20 of 20 reference cases correct on risk tier, AI-system status, GPAI involvement and role in the latest run (earlier runs: 18–19 of 20; the misses are run-to-run variance), with nearly every claim verified as supported.
+Measured on 33 reference cases (20 short cases, 9 borderline cases, and 4 long real documents of up to 192,000 characters), with expected answers read from the Act:
+
+- **Classification:** 30 of 33 correct on risk tier, AI-system status, general-purpose AI involvement and role, against 24 of 33 for the earlier free-form assessor on the same cases.
+- **Obligations:** 95% of the obligations the cases trigger are listed (earlier assessor: 88%).
+- **Speed and cost:** about 30 seconds per case and under 50 seconds for the longest documents; about half the cost of the earlier assessor.
+- **Search benchmark:** the corpus search (`src/law.py`, used by the retrieval evals and kept for a follow-up chat) returns the right article in its top 12 for 87.1% of 171 independent questions from two other projects ([AI Act Evaluation Benchmark](https://github.com/davidath/ai-act-evaluation-benchmark), [ActLens](https://github.com/SyedAshhadIbrar/ActLens)), never used for tuning.
 
 ## Known limitations
 
 - No follow-up chat yet: the UI's "Answer Questions and Re-run" starts a fresh assessment with your answers added.
 - Model output varies between runs; borderline cases can change tier or role.
+- Systems outside the Act's scope show as "Unclear" in the UI until it gets an out-of-scope label.
 - Uploaded text reaches the model directly; a document could try to steer the assessment (quotes cannot be invented, conclusions can be nudged).
 - Access is protected by one shared code with no rate limit.
 
@@ -66,7 +70,7 @@ Set `DEEPSEEK_API_KEY` and `ACCESS_CODE` for Production and Preview in the Verce
 
 | Path | Contents |
 |---|---|
-| `src/` | Pipeline: `ingest.py`, `law.py` (search), `agents.py` (Assessor, Verifier), `citations.py` (quote check), `report.py`, `config.py` |
+| `src/` | Pipeline: `ingest.py`, `agents.py` (questionnaire, Verifier, obligation status), `rules.py` (questions, classification, obligations), `citations.py` (quote check), `report.py`, `law.py` (corpus and search), `config.py` |
 | `api/index.py` | FastAPI endpoint; also serves the UI locally |
 | `public/index.html` | Built UI (generated from `web/`) |
 | `web/` | UI source |

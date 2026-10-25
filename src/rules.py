@@ -46,7 +46,8 @@ QUESTIONS = [
     Q("B1", "B", "Does the business develop the system, or have it developed, and place it on the market or put it into "
       "service under its own name or trademark?", ACT + "3",
       "that develops an AI system or a general-purpose AI model or that has an AI system", gating=True),
-    Q("B2", "B", "Does the business use the system under its own authority in a professional activity?", ACT + "3",
+    Q("B2", "B", "Does the business itself use the system under its own authority in its own professional activity? "
+      "Developing, selling, licensing or hosting it for customers who use it is not use.", ACT + "3",
       "using an AI system under its authority except where the AI system is used in the course of a personal", gating=True),
     Q("B3", "B", "Does the business put its own name or trademark on a high-risk AI system that someone else already "
       "placed on the market or put into service?", ACT + "25",
@@ -187,7 +188,8 @@ QUESTIONS = [
     Q("G5", "G", "Does it generate or manipulate text published to inform the public on matters of public interest?",
       ACT + "50", "generates or manipulates text which is published with the purpose of informing the public"),
     # H. General-purpose AI (Art 3(63), 51, 53)
-    Q("H1", "H", "Is the system built on a general-purpose AI model, such as a large language model or foundation model?",
+    Q("H1", "H", "Is the system built on a general-purpose AI model, such as a large language model or foundation model? "
+      "Answer no when the documents describe the system's own model and it is not a general-purpose one.",
       ACT + "3", "means an AI model, including where such an AI model is trained with a large amount of data"),
     Q("H2", "H", "Does the business itself train, or place on the market, that general-purpose AI model?", ACT + "53",
       "draw up and keep up-to-date the technical documentation of the model"),
@@ -208,7 +210,8 @@ def classify(answers: dict[str, str]) -> dict:
     """Apply the Act to the answers ("yes" / "no" / "not_mentioned"; missing = not_mentioned). Pure.
 
     The tier is the most severe confirmed one. An unknown answer that could raise it sets `could_be` and becomes an
-    open question; an unknown exception never lowers the tier (fail closed); unknown gating facts make it unclear.
+    open question; an unknown exception never lowers the tier (fail closed). Unknown AI-system status (A1) or EU link
+    (A3) is assumed, as the case was uploaded as an AI use case, and asked: A1 then leaves ai_system unclear, confidence low.
     """
     path, open_questions, pending = [], [], []
 
@@ -223,14 +226,16 @@ def classify(answers: dict[str, str]) -> dict:
         if answers.get(qid, "not_mentioned") == "not_mentioned":
             pending.append((qid, tier))
 
-    def decision(tier: str, ai_system: str = "yes", exception: bool = False) -> dict:
+    def decision(tier: str, ai_system: str | None = None, exception: bool = False) -> dict:
+        ai_system = ai_system or ("unclear" if a1 == "not_mentioned" else "yes")
         higher = [(q, t) for q, t in pending if tier in TIERS and TIERS.index(t) > TIERS.index(tier)]
         for q, _ in higher:
             ask(q)
         could_be = max((t for _, t in higher), key=TIERS.index, default=None)
         role = _role(answers, tier, ask if tier != "out_of_scope" else answers.get)
         gpai = {"yes": "yes", "no": "no"}.get(answers.get("H1"), "unclear")
-        confidence = "low" if tier == "unclear" or could_be else "medium" if open_questions else "high"
+        unsure = tier == "unclear" or could_be or ai_system == "unclear"
+        confidence = "low" if unsure else "medium" if open_questions else "high"
         return {"ai_system": ai_system, "risk_tier": tier, "role": role, "gpai_involved": gpai, "confidence": confidence,
                 "could_be": could_be, "annex_iii_exception": exception, "path": path, "open_questions": open_questions,
                 "transparency": [q for q in ("G1", "G2", "G3", "G4", "G5") if answers.get(q) == "yes"]}
@@ -241,8 +246,6 @@ def classify(answers: dict[str, str]) -> dict:
         if a2 == "yes":
             ask("A2")
         return decision("out_of_scope", ai_system="no")
-    if a1 == "not_mentioned":
-        return decision("unclear", ai_system="unclear")
     if ask("A3") == "no" or any(answers.get(q) == "yes" and ask(q) for q in _EXCLUSIONS):
         return decision("out_of_scope")
 
