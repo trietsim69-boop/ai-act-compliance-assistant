@@ -248,7 +248,34 @@ def assess_case(case: list[dict]) -> dict:
     """Questionnaire (call ①) -> rules.classify -> rules.obligations -> status and prose (call ②), plus `decision`.
     Raises CaseError for unusable input; openai.OpenAIError or pydantic.ValidationError when the model fails."""
     pack = _usable(case)
-    q = answer_questions(case, pack)
+    return _finish(case, pack, answer_questions(case, pack))
+
+
+def reassess(case: list[dict], previous: dict, given: dict[str, dict]) -> dict:
+    """Re-run with the user's answers ({id: {"answer": "yes"|"no", "text": ...}}) instead of call ①. Earlier answers
+    stay when their quotes still match the documents (no Verifier: it is the user's own report); each user answer
+    becomes a citable "Your answers" passage. Only call ② and its Verifier run again."""
+    mine = [{"id": f"answers:{i}", "source": "Your answers", "label": "Your answers",
+             "text": f"{rules.BY_ID[q].text} {a['answer'].capitalize()}. {a.get('text', '')}".strip()}
+            for i, (q, a) in enumerate(given.items(), 1)]
+    pack = _usable(case + mine)
+    earlier = [Claim.model_validate(c) for c in previous.get("claims", []) if c.get("id") in rules.BY_ID and c["id"] not in given]
+    problems = check_references(SimpleNamespace(claims=earlier), pack)
+    kept = {c.id: c for c in earlier if c.references}
+    answers = {q: v if v == "not_mentioned" or q in kept else "not_mentioned"
+               for q, v in previous.get("answers", {}).items() if q in rules.BY_ID and q not in given}
+    yours = [Claim(id=q, kind="fact", text=p["text"], references=[Reference(chunk_id=p["id"], quote=p["text"])])
+             for q, p in zip(given, mine)]
+    check_references(SimpleNamespace(claims=yours), pack)
+    note = lambda c, why: Verdict(claim_id=c.id, status="supported", reason=why)  # noqa: E731
+    q = {"answers": answers | {q: a["answer"] for q, a in given.items()}, "claims": list(kept.values()) + yours,
+         "verdicts": [note(c, "Confirmed in the earlier assessment.") for c in kept.values()] + [note(c, "Your answer.") for c in yours],
+         "problems": problems, "revised": False, "unverified": {}, "other_concerns": []}
+    return _finish(case + mine, pack, q)
+
+
+def _finish(case: list[dict], pack: dict, q: dict) -> dict:
+    """Everything after the answers: rules, code-written legal claims, call ② and the result."""
     decision = rules.classify(q["answers"])
     rows = rules.obligations(decision, q["answers"])
     legal = []
