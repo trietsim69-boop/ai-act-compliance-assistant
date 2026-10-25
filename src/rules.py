@@ -45,7 +45,7 @@ QUESTIONS = [
     # B. Role (Art 3(3), 3(4), Art 25, Art 27 deployer type)
     Q("B1", "B", "Does the business develop the system, or have it developed, and place it on the market or put it into "
       "service under its own name or trademark? Building or integrating a system, also on top of a third-party model, and "
-      "offering or running it under its own name counts.", ACT + "3",
+      "offering it under its own name counts; only using someone else's system does not.", ACT + "3",
       "that develops an AI system or a general-purpose AI model or that has an AI system", gating=True),
     Q("B2", "B", "Does the business itself use the system under its own authority in its own professional activity? "
       "Developing, selling, licensing or hosting it for customers who use it is not use.", ACT + "3",
