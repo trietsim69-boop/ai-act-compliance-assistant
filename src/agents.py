@@ -1,4 +1,4 @@
-"""Assessor (searches the law itself) -> quote check -> Verifier -> at most one revision.
+"""Decision tree: questionnaire (call 1) -> quote check -> Verifier -> rules -> obligation status and prose (call 2).
 
     python -m src.agents path/to/case.pdf [more files...]
 """
@@ -15,12 +15,11 @@ from openai import OpenAI
 from pydantic import BaseModel, ValidationError, field_validator
 from pydantic.json_schema import SkipJsonSchema
 
-from src import law, rules
+from src import rules
 from src.citations import check_references
 from src.config import LLM_API_KEY, LLM_BASE_URL, LLM_EXTRA_BODY, LLM_MODEL
 from src.ingest import case_passages
 
-MAX_SEARCH_ROUNDS = 6
 MAX_CASE_CHARS = 500_000
 LLM_TIMEOUT_S = 120  # per call; the SDK default is 600
 MAX_OUTPUT_TOKENS = 32_768  # DeepSeek's default (~8k) cut off the 69-answer questionnaire reply
@@ -38,31 +37,6 @@ class Claim(BaseModel):
     kind: Literal["fact", "legal"]
     text: str
     references: list[Reference] = []
-
-
-class Requirement(BaseModel):
-    requirement: str
-    status: Literal["met", "gap", "unclear", "not_applicable"]
-    explanation: str
-    claim_ids: list[str] = []
-
-
-class Question(BaseModel):
-    topic: str
-    question: str
-
-
-class Assessment(BaseModel):
-    summary: str
-    ai_system: Literal["yes", "no", "unclear"]
-    role: Literal["provider", "deployer", "both", "unclear"]
-    risk_tier: Literal["prohibited", "high_risk", "limited_risk", "minimal_risk", "unclear"]
-    gpai_involved: Literal["yes", "no", "unclear"]
-    confidence: Literal["low", "medium", "high"]
-    reasoning: str
-    claims: list[Claim]
-    requirements: list[Requirement]
-    missing_information: list[Question]
 
 
 class Verdict(BaseModel):
@@ -148,39 +122,14 @@ GROUPS = {"A": "Scope", "B": "Role", "C": "Prohibited practices", "D": "Regulate
           "F": "High-risk exception", "G": "Transparency", "H": "General-purpose AI"}
 
 
-ASSESSOR_PROMPT = f"""You are an EU AI Act compliance analyst. A business describes an AI use case in the case documents. Decide whether the AI Act applies, the risk category, the business's role, which obligations follow, and whether the documents show those obligations are met.
-
-Process
-- Use the search_law tool to find every provision you rely on. Use specific legal terms, e.g. "Article 3 definition AI system inference", "Article 5 emotion recognition workplace", "Annex III employment recruitment", "Article 50 inform natural persons interacting with AI system", "general-purpose AI model provider obligations". Check at least: the AI system definition, prohibited practices, high-risk classification (Article 6, Annex I, Annex III), transparency (Article 50), AI literacy (Article 4), and general-purpose AI when a third-party or foundation model is used.
-- You may cite only passages shown to you: case passages (ids like doc1:2) and law passages returned by search_law (ids like eu_ai_act/art-50/1).
-
-Rules
-1. Every claim has references: an exact chunk_id and a verbatim quote copied from that passage (a full phrase or sentence, no ellipses, no paraphrase). Facts about the business ("fact") cite case passages; statements about the law ("legal") cite law passages.
-2. Never invent facts. When something needed is not in the documents, add it to missing_information and mark dependent requirements "unclear".
-3. Use qualified language ("appears to", "likely"). This is a preliminary assessment, not legal advice.
-4. Use low confidence when purpose, affected persons, decision impact, human oversight, deployment context, or role are missing.
-5. requirements: the obligations that follow from the risk tier and role (for example risk management, data governance, technical documentation, record-keeping, human oversight, accuracy and robustness, transparency, registration, AI literacy), each with status met / gap / unclear / not_applicable, a short explanation, and the ids of the claims that back it.
-6. risk_tier is the most severe tier that applies; general-purpose AI use goes in gpai_involved.
-8. role is the business's role for this system under Article 3: "provider" if it develops the system, or has it developed and places it on the market or puts it into service under its own name or trademark; "deployer" if it uses a system under its authority that someone else provides; "both" if it develops and uses the system itself. Use "unclear" only when the documents do not say who develops or who uses the system, and then ask about it in missing_information.
-7. Write summary, reasoning, claim texts, requirements and questions in English, unless the case documents are clearly written in another language; then use that language. Quotes always stay verbatim in their source language; enum values stay in English.
-
-When you are done searching, reply with one JSON object only, matching this JSON schema:
-{json.dumps(Assessment.model_json_schema())}"""
-
 VERIFIER_PROMPT = """You verify claims in an EU AI Act assessment against the passages they quote.
 For each claim, decide whether its quoted passages establish the entire claim. Check negation, the actor responsible, scope, conditions and exceptions. Accept faithful paraphrases even with little word overlap.
 - supported: the passages establish the whole claim
 - contradicted: the passages say the opposite
 - insufficient: evidence missing, ambiguous, about a different actor, or narrower than the claim
 Write each reason in the language of the claim.
+A claim that starts with "Does not apply:" is supported when the passages describe the system's purpose and functions and nothing in them suggests that it applies; it does not need an explicit denial.
 Reply with JSON only: {"verdicts": [{"claim_id": "...", "status": "supported|contradicted|insufficient", "reason": "one sentence"}]}, exactly one verdict per claim."""
-
-SEARCH_TOOL = {"type": "function", "function": {
-    "name": "search_law",
-    "description": "Full-text search over the EU AI Act and Commission guidelines. Returns passages with ids to cite.",
-    "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]},
-}}
-
 
 class CaseError(Exception):
     """The uploaded case cannot be assessed (empty, too large). The caller's fault, unlike model errors."""
@@ -191,12 +140,10 @@ def _client() -> OpenAI:
     return OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL, timeout=LLM_TIMEOUT_S, max_retries=2)
 
 
-def chat(messages: list[dict], tools: list | None = None) -> dict:
-    kwargs = {"tools": tools} if tools else {"response_format": {"type": "json_object"}}
+def chat(messages: list[dict]) -> dict:
     reply = _client().chat.completions.create(model=LLM_MODEL, messages=messages, temperature=0.1, max_tokens=MAX_OUTPUT_TOKENS,
-                                              extra_body=LLM_EXTRA_BODY, **kwargs)
-    message = reply.choices[0].message.model_dump(exclude_none=True)
-    return {k: v for k, v in message.items() if k in ("role", "content", "tool_calls")}
+                                              response_format={"type": "json_object"}, extra_body=LLM_EXTRA_BODY)
+    return {"role": "assistant", "content": reply.choices[0].message.content}
 
 
 def _format(chunks) -> str:
@@ -206,23 +153,6 @@ def _format(chunks) -> str:
 def _parse(content: str, model: type[BaseModel]):
     match = re.search(r"\{.*\}", content or "", re.S)
     return model.model_validate_json(match.group() if match else content or "")
-
-
-def _assess(messages: list[dict], pack: dict) -> Assessment:
-    for round_ in range(MAX_SEARCH_ROUNDS + 1):
-        message = chat(messages, tools=None if round_ == MAX_SEARCH_ROUNDS else [SEARCH_TOOL])
-        messages.append(message)
-        if not message.get("tool_calls"):
-            break
-        for call in message["tool_calls"]:
-            try:
-                hits = law.search(json.loads(call["function"]["arguments"])["query"])
-                content = _format(hits) or "No results."
-                pack.update((c["id"], c) for c in hits)
-            except (ValueError, KeyError, TypeError):
-                content = 'Invalid arguments. Call search_law with {"query": "<search terms>"}.'
-            messages.append({"role": "tool", "tool_call_id": call["id"], "content": content})
-    return _parsed(messages, Assessment)
 
 
 def _parsed(messages: list[dict], model: type[BaseModel]):
@@ -248,7 +178,7 @@ def _checked(answers, pack: dict) -> tuple[dict, dict, list[str], set[str]]:
               for a in answers if a.answer != "not_mentioned"]
     holder = SimpleNamespace(claims=claims)
     problems = check_references(holder, pack)
-    verdicts = {v.claim_id: v for v in verify(holder, pack, TREE_VERIFIER_PROMPT)} if claims else {}
+    verdicts = {v.claim_id: v for v in verify(holder, pack)} if claims else {}
     failed = {c.id for c in claims if not c.references or verdicts[c.id].status != "supported"}
     return {c.id: c for c in claims}, verdicts, problems, failed
 
@@ -285,15 +215,12 @@ def answer_questions(case: list[dict], pack: dict) -> dict:
             "other_concerns": [c for c in given.other_concerns if c.references]}
 
 
-TREE_VERIFIER_PROMPT = VERIFIER_PROMPT + """
-A claim that starts with "Does not apply:" is supported when the passages describe the system's purpose and functions and nothing in them suggests that it applies; it does not need an explicit denial."""
-
-
-def verify(assessment: Assessment, pack: dict, prompt: str = VERIFIER_PROMPT) -> list[Verdict]:
+def verify(assessment, pack: dict) -> list[Verdict]:
+    """One verdict per claim of `assessment.claims`; an unusable reply supports nothing."""
     claims = [{"claim_id": c.id, "kind": c.kind, "claim": c.text,
                "evidence": [{"chunk_id": r.chunk_id, "quote": r.quote, "passage": pack[r.chunk_id]["text"]}
                             for r in c.references]} for c in assessment.claims]
-    reply = chat([{"role": "system", "content": prompt},
+    reply = chat([{"role": "system", "content": VERIFIER_PROMPT},
                   {"role": "user", "content": json.dumps(claims, ensure_ascii=False)}])
     try:
         given = {v.claim_id: v for v in _parse(reply.get("content"), Verification).verdicts}
@@ -312,9 +239,9 @@ def _usable(case: list[dict]) -> dict:
     return {c["id"]: c for c in case}
 
 
-def assess_case_tree(case: list[dict]) -> dict:
-    """Decision tree: questionnaire (call ①) -> rules.classify -> rules.obligations -> status and prose (call ②).
-    Same result shape as assess_case, plus `decision`. Raises like assess_case."""
+def assess_case(case: list[dict]) -> dict:
+    """Questionnaire (call ①) -> rules.classify -> rules.obligations -> status and prose (call ②), plus `decision`.
+    Raises CaseError for unusable input; openai.OpenAIError or pydantic.ValidationError when the model fails."""
     pack = _usable(case)
     q = answer_questions(case, pack)
     decision = rules.classify(q["answers"])
@@ -365,31 +292,6 @@ def assess_case_tree(case: list[dict]) -> dict:
             "revised": q["revised"], "sources": {i: pack[i] for i in cited},
             "decision": decision | {"answers": q["answers"], "unverified": q["unverified"],
                                     "other_concerns": [c.text for c in q["other_concerns"]]}}
-
-
-def assess_case(case: list[dict]) -> dict:
-    """Raises CaseError for unusable input; openai.OpenAIError or pydantic.ValidationError when the model fails."""
-    pack = _usable(case)
-    messages = [{"role": "system", "content": ASSESSOR_PROMPT},
-                {"role": "user", "content": "## Case documents\n\n" + _format(case) +
-                 "\n\nWrite your prose in the language these case documents are written in (English if unsure)."}]
-    assessment = _assess(messages, pack)
-    problems = check_references(assessment, pack)
-    verdicts = verify(assessment, pack)
-    revised = False
-    failed = [v for v in verdicts if v.status != "supported"]
-    if problems or failed:
-        revised = True
-        feedback = "\n".join(problems + [f"{v.claim_id}: {v.status} - {v.reason}" for v in failed])
-        messages.append({"role": "user", "content": "A reviewer checked your claims:\n" + feedback +
-                         "\n\nRevise: fix, requote or remove these claims (search again if needed) and lower "
-                         "confidence where evidence is missing. Reply with the full JSON object."})
-        assessment = _assess(messages, pack)
-        problems = check_references(assessment, pack)
-        verdicts = verify(assessment, pack)
-    cited = sorted({r.chunk_id for c in assessment.claims for r in c.references})
-    return {"assessment": assessment.model_dump(), "verdicts": [v.model_dump() for v in verdicts],
-            "reference_problems": problems, "revised": revised, "sources": {i: pack[i] for i in cited}}
 
 
 if __name__ == "__main__":
