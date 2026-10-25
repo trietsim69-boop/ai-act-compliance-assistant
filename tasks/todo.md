@@ -173,8 +173,8 @@ Record the source URL and licence for each case in `cases.json`.
 ### Task 14: API accepts answers
 **Description:** `POST /api/assess` takes an optional `answers` field (JSON `{question_id: {"answer": "yes"|"no", "text": "..."}}`) and the previous `decision.answers`. The files are re-sent (the server keeps no state) and re-ingested; earlier answers pass `check_references` again, and your answers become a "your answers" passage that the quotes cite. It skips the questionnaire call and runs `classify()` plus call ②.
 **Acceptance criteria:**
-- [ ] A re-run with answers makes exactly the call ② and Verifier requests (fake `chat` counts calls).
-- [ ] Malformed `answers` → 422.
+- [x] A re-run with answers makes exactly the call ② and Verifier requests (fake `chat` counts calls). Done 2026-10-25 on `answers-rerun` (`47d0fd7`).
+- [x] Malformed `answers` (bad JSON, unknown id, bad value, bad claims) → 422.
 **Verification:** `pytest` on `testing`; one live re-run on the preview.
 **Dependencies:** Task 13. **Files:** `api/index.py`, `src/agents.py`, `tests/test_api.py`. **Scope:** M
 
