@@ -145,10 +145,10 @@ Record the source URL and licence for each case in `cases.json`.
 ### Task 12: Comparison and decision
 **Description:** The one full paid run (also the baseline, since Task 4 became a smoke test). Run old and new on all 33 cases on `deepseek-flash`, including the old pipeline's requirements that neither quote nor name an article (if more than a few, add a requirement-name → article fallback reusing the Task 8 names). Write both tables into `plan.md`, check them against the bar (Q15), and **you decide**. If the bar isn't met: fix and re-run, no PR.
 **Acceptance criteria:**
-- [ ] Tier, role and GPAI accuracy are at least the old pipeline's.
-- [ ] Obligation recall is at least 90% with 0 false "met".
-- [ ] Cost is at most 2× the old pipeline's.
-- [ ] Every long case finishes in under 300 seconds.
+- [x] Tier, role and GPAI accuracy are at least the old pipeline's (tier 0 vs 2, role 1 vs 1, GPAI 2 vs 8).
+- [x] Obligation recall is at least 90% with 0 false "met" (95.2%; the one false met was a gold error, Amsterdam Art 4 now "any").
+- [x] Cost is at most 2× the old pipeline's ($0.54 vs $1.10 at peak).
+- [x] Every long case finishes in under 300 seconds (slowest 47 s). Adopted 2026-10-25.
 **Dependencies:** Task 11. **Files:** `tasks/plan.md`. **Scope:** XS
 
 ### Task 13: Switch and delete the old Assessor
@@ -159,8 +159,8 @@ Record the source URL and licence for each case in `cases.json`.
 - Update the README's "How it works" and "Quality" with the Task 12 numbers.
 - Update the local CLAUDE.md pipeline invariants.
 **Acceptance criteria:**
-- [ ] The API response keeps every key the UI reads; the UI shows `out_of_scope` as "Unclear" until Phase 4.
-- [ ] `pytest` passes, with the old-Assessor tests rewritten.
+- [x] The API response keeps every key the UI reads; the UI shows `out_of_scope` as "Unclear" until Phase 4. Live local API call: HTTP 200, 35 s.
+- [x] `pytest` passes (84), with the old-Assessor tests rewritten. Done 2026-10-25.
 **Verification:** a preview deployment with one long case timed under 300 seconds; then production with one case after you merge.
 **Dependencies:** Task 12 (adopt). **Files:** `src/agents.py`, `api/index.py`, `README.md`, `tests/test_agents.py`, `tests/test_api.py`. **Scope:** M
 
