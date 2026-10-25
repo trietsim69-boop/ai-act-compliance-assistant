@@ -118,6 +118,11 @@ Give every obligation id exactly once, with a one-sentence explanation. Then wri
 Reply with one JSON object only, matching this JSON schema:
 {schema}"""
 
+MAX_QUESTIONS = 10  # more open questions than this means the documents say too little; ask for a description instead
+DESCRIBE = ("The documents say too little to assess this system. Describe what it does, who uses it and on whom, what its "
+            "output is used for, and whether you build it or buy it.")
+GATING = ("A1", "B1", "B2")
+
 GROUPS = {"A": "Scope", "B": "Role", "C": "Prohibited practices", "D": "Regulated products", "E": "High-risk uses",
           "F": "High-risk exception", "G": "Transparency", "H": "General-purpose AI"}
 
@@ -283,7 +288,12 @@ def assess_case(case: list[dict]) -> dict:
     claims = q["claims"] + legal + [c for c in evidence if c.id in supported]
     rule_verdict = lambda c: Verdict(claim_id=c.id, status="supported", reason="Applies under the rules; quotes its own provision.")  # noqa: E731
     all_verdicts = q["verdicts"] + [rule_verdict(c) for c in legal] + [verdicts[c.id] for c in evidence if c.id in supported]
-    questions = [{"topic": GROUPS[qid[0]], "question": rules.BY_ID[qid].text} for qid in decision["open_questions"]]
+    asked = decision["open_questions"]
+    if len(asked) > MAX_QUESTIONS:
+        asked = [q for q in asked if q in GATING]
+    questions = [{"topic": GROUPS[qid[0]], "question": rules.BY_ID[qid].text} for qid in asked]
+    if len(decision["open_questions"]) > MAX_QUESTIONS:
+        questions.insert(0, {"topic": "Description", "question": DESCRIBE})
     assessment = {"summary": rating.summary or "No obligations apply under the rules.", "reasoning": rating.reasoning or classification,
                   **{k: decision[k] for k in ("ai_system", "role", "risk_tier", "gpai_involved", "confidence")},
                   "claims": [c.model_dump() for c in claims], "requirements": requirements, "missing_information": questions}
