@@ -34,6 +34,9 @@ def build_report(result: dict, file_errors: list[dict]) -> dict:
         (sum(r["unverified"] for r in requirements), "requirement(s) marked met are not backed by supported claims."),
     ]
     warnings += [f"{n} {text}" for n, text in counts if n]
+    could_be = (result.get("decision") or {}).get("could_be")
+    if could_be:
+        warnings.append(f"This could be {could_be.replace('_', ' ')}: answer the open questions before relying on the risk tier.")
     if a["confidence"] == "low":
         warnings.append("Confidence is low: key facts are missing from the documents (see the questions).")
     if result["revised"]:

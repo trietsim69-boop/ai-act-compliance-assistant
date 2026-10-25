@@ -203,7 +203,7 @@ BY_ID = {q.id: q for q in QUESTIONS}
 TIERS = ["minimal_risk", "limited_risk", "high_risk", "prohibited"]  # ascending severity
 _ART5 = [("C1", None), ("C2", None), ("C3", None), ("C4", None), ("C5", None), ("C6", "C7"), ("C8", None),
          ("C9", "C10"), ("C11", "C12"), ("C13", "C14")]  # (practice, its exception)
-_EXCLUSIONS = ["A4", "A5", "A6", "A7"]  # Art 2(3), 2(6), 2(8), 2(10)
+_EXCLUSIONS = ["A4", "A5", "A6"]  # Art 2(3), 2(6), 2(8); personal use (A7, Art 2(10)) only removes deployer duties
 
 
 def classify(answers: dict[str, str]) -> dict:
@@ -345,6 +345,8 @@ def obligations(decision: dict, answers: dict[str, str]) -> list[Obligation]:
         return [O("5", "Stop placing on the market, putting into service or using the practice", ACT + "5",
                   "The following AI practices shall be prohibited")]
     yes = lambda q: answers.get(q) == "yes"  # noqa: E731
+    if yes("A7") and role not in ("provider", "both"):  # Art 2(10): a private person's own use carries no deployer duties
+        return []
     provider, deployer = role in ("provider", "both", "unclear"), role in ("deployer", "both", "unclear")
     listed = [q.id for q in QUESTIONS if q.group == "E" and yes(q.id)]
     annex_iii = bool(listed) and listed != ["E2"]  # Arts 27, 49, 86 exclude Annex III point 2
