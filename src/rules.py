@@ -44,7 +44,8 @@ QUESTIONS = [
       "does not apply to AI systems released under free and open-source licences"),
     # B. Role (Art 3(3), 3(4), Art 25, Art 27 deployer type)
     Q("B1", "B", "Does the business develop the system, or have it developed, and place it on the market or put it into "
-      "service under its own name or trademark?", ACT + "3",
+      "service under its own name or trademark? Building or integrating a system, also on top of a third-party model, and "
+      "offering or running it under its own name counts.", ACT + "3",
       "that develops an AI system or a general-purpose AI model or that has an AI system", gating=True),
     Q("B2", "B", "Does the business itself use the system under its own authority in its own professional activity? "
       "Developing, selling, licensing or hosting it for customers who use it is not use.", ACT + "3",
@@ -57,7 +58,8 @@ QUESTIONS = [
     Q("B5", "B", "Does the business change the intended purpose of an AI system that was not high-risk (including a "
       "general-purpose AI system such as a chatbot) so that it becomes high-risk?", ACT + "25",
       "they modify the intended purpose of an AI system, including a general-purpose AI system"),
-    Q("B6", "B", "Is the business a body governed by public law, or a private entity providing public services?",
+    Q("B6", "B", "Is the business a public authority or another body governed by public law (for example a ministry, "
+      "municipality, agency, public school or hospital), or a private entity providing public services?",
       ACT + "27", "deployers that are bodies governed by public law, or are private entities providing public services"),
     # C. Prohibited practices (Art 5(1)) and their exceptions
     Q("C1", "C", "Does it use subliminal, purposefully manipulative or deceptive techniques that materially distort "
@@ -84,7 +86,8 @@ QUESTIONS = [
       "from the internet or CCTV footage?", ACT + "5", "untargeted scraping of facial images from the internet or CCTV footage"),
     Q("C9", "C", "Does it infer the emotions of people in the workplace or in education institutions?", ACT + "5",
       "to infer emotions of a natural person in the areas of workplace and education institutions"),
-    Q("C10", "C", "Is that emotion inference intended for medical or safety reasons?", ACT + "5",
+    Q("C10", "C", "Is that emotion inference intended for medical or safety reasons, such as protecting people's health "
+      "or preventing accidents and incidents?", ACT + "5",
       "intended to be put in place or into the market for medical or safety reasons"),
     Q("C11", "C", "Does it categorise individual people from their biometric data to deduce their race, political "
       "opinions, trade union membership, religious or philosophical beliefs, sex life or sexual orientation?", ACT + "5",

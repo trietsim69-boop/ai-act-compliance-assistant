@@ -118,6 +118,11 @@ Give every obligation id exactly once, with a one-sentence explanation. Then wri
 Reply with one JSON object only, matching this JSON schema:
 {schema}"""
 
+MAX_QUESTIONS = 10  # more open questions than this means the documents say too little; ask for a description instead
+DESCRIBE = ("The documents say too little to assess this system. Describe what it does, who uses it and on whom, what its "
+            "output is used for, and whether you build it or buy it.")
+GATING = ("A1", "B1", "B2")
+
 GROUPS = {"A": "Scope", "B": "Role", "C": "Prohibited practices", "D": "Regulated products", "E": "High-risk uses",
           "F": "High-risk exception", "G": "Transparency", "H": "General-purpose AI"}
 
@@ -243,7 +248,34 @@ def assess_case(case: list[dict]) -> dict:
     """Questionnaire (call ①) -> rules.classify -> rules.obligations -> status and prose (call ②), plus `decision`.
     Raises CaseError for unusable input; openai.OpenAIError or pydantic.ValidationError when the model fails."""
     pack = _usable(case)
-    q = answer_questions(case, pack)
+    return _finish(case, pack, answer_questions(case, pack))
+
+
+def reassess(case: list[dict], previous: dict, given: dict[str, dict]) -> dict:
+    """Re-run with the user's answers ({id: {"answer": "yes"|"no", "text": ...}}) instead of call ①. Earlier answers
+    stay when their quotes still match the documents (no Verifier: it is the user's own report); each user answer
+    becomes a citable "Your answers" passage. Only call ② and its Verifier run again."""
+    mine = [{"id": f"answers:{i}", "source": "Your answers", "label": "Your answers",
+             "text": f"{rules.BY_ID[q].text} {a['answer'].capitalize()}. {a.get('text', '')}".strip()}
+            for i, (q, a) in enumerate(given.items(), 1)]
+    pack = _usable(case + mine)
+    earlier = [Claim.model_validate(c) for c in previous.get("claims", []) if c.get("id") in rules.BY_ID and c["id"] not in given]
+    problems = check_references(SimpleNamespace(claims=earlier), pack)
+    kept = {c.id: c for c in earlier if c.references}
+    answers = {q: v if v == "not_mentioned" or q in kept else "not_mentioned"
+               for q, v in previous.get("answers", {}).items() if q in rules.BY_ID and q not in given}
+    yours = [Claim(id=q, kind="fact", text=p["text"], references=[Reference(chunk_id=p["id"], quote=p["text"])])
+             for q, p in zip(given, mine)]
+    check_references(SimpleNamespace(claims=yours), pack)
+    note = lambda c, why: Verdict(claim_id=c.id, status="supported", reason=why)  # noqa: E731
+    q = {"answers": answers | {q: a["answer"] for q, a in given.items()}, "claims": list(kept.values()) + yours,
+         "verdicts": [note(c, "Confirmed in the earlier assessment.") for c in kept.values()] + [note(c, "Your answer.") for c in yours],
+         "problems": problems, "revised": False, "unverified": {}, "other_concerns": []}
+    return _finish(case + mine, pack, q)
+
+
+def _finish(case: list[dict], pack: dict, q: dict) -> dict:
+    """Everything after the answers: rules, code-written legal claims, call ② and the result."""
     decision = rules.classify(q["answers"])
     rows = rules.obligations(decision, q["answers"])
     legal = []
@@ -283,7 +315,12 @@ def assess_case(case: list[dict]) -> dict:
     claims = q["claims"] + legal + [c for c in evidence if c.id in supported]
     rule_verdict = lambda c: Verdict(claim_id=c.id, status="supported", reason="Applies under the rules; quotes its own provision.")  # noqa: E731
     all_verdicts = q["verdicts"] + [rule_verdict(c) for c in legal] + [verdicts[c.id] for c in evidence if c.id in supported]
-    questions = [{"topic": GROUPS[qid[0]], "question": rules.BY_ID[qid].text} for qid in decision["open_questions"]]
+    asked = decision["open_questions"]
+    if len(asked) > MAX_QUESTIONS:
+        asked = [q for q in asked if q in GATING]
+    questions = [{"topic": GROUPS[qid[0]], "question": rules.BY_ID[qid].text} for qid in asked]
+    if len(decision["open_questions"]) > MAX_QUESTIONS:
+        questions.insert(0, {"topic": "Description", "question": DESCRIBE})
     assessment = {"summary": rating.summary or "No obligations apply under the rules.", "reasoning": rating.reasoning or classification,
                   **{k: decision[k] for k in ("ai_system", "role", "risk_tier", "gpai_involved", "confidence")},
                   "claims": [c.model_dump() for c in claims], "requirements": requirements, "missing_information": questions}
