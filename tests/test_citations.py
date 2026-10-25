@@ -1,5 +1,7 @@
 from evals.retrieval import GOLD
-from src.agents import Assessment
+from types import SimpleNamespace
+
+from src.agents import Answers, Claim
 from src.citations import _normalise, check_references, find_span
 from src.law import corpus
 
@@ -29,13 +31,10 @@ def test_every_gold_quote_gets_an_exact_span_in_its_passage():
 
 
 def test_spans_are_set_by_the_checker_and_hidden_from_the_model():
-    assert {"start", "end"}.isdisjoint(Assessment.model_json_schema()["$defs"]["Reference"]["properties"])
+    assert {"start", "end"}.isdisjoint(Answers.model_json_schema()["$defs"]["Reference"]["properties"])
     law = corpus()["eu_ai_act/art-50/1"]
-    a = Assessment.model_validate({
-        "summary": "s", "ai_system": "yes", "role": "deployer", "risk_tier": "limited_risk", "gpai_involved": "no",
-        "confidence": "low", "reasoning": "r", "requirements": [], "missing_information": [],
-        "claims": [{"id": "c1", "kind": "legal", "text": "t", "references": [
-            {"chunk_id": law["id"], "quote": "Providers shall ensure that AI systems intended to interact", "start": 0, "end": 1}]}]})
-    assert check_references(a, {law["id"]: law}) == []
-    ref = a.claims[0].references[0]
+    claim = Claim.model_validate({"id": "c1", "kind": "legal", "text": "t", "references": [
+        {"chunk_id": law["id"], "quote": "Providers shall ensure that AI systems intended to interact", "start": 0, "end": 1}]})
+    assert check_references(SimpleNamespace(claims=[claim]), {law["id"]: law}) == []
+    ref = claim.references[0]
     assert law["text"][ref.start:ref.end] == "Providers shall ensure that AI systems intended to interact"

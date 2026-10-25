@@ -19,17 +19,23 @@ def test_assess_endpoint_returns_result_report_and_file_errors(monkeypatch, resu
     assert body["report"]["warnings"][0].startswith("Skipped scan.pdf")
 
 
-def test_end_to_end_with_scripted_model(monkeypatch, result):
-    a = result["assessment"]
-    a.update(claims=[{"id": "c1", "kind": "fact", "text": "It filters email.",
-                      "references": [{"chunk_id": "doc1:1", "quote": "spam filter sorts incoming email"}]}], requirements=[])
-    replies = [{"role": "assistant", "content": json.dumps(a)},
-               {"role": "assistant", "content": json.dumps({"verdicts": [{"claim_id": "c1", "status": "supported", "reason": "ok"}]})}]
-    monkeypatch.setattr(agents, "chat", lambda messages, tools=None: replies.pop(0))
+def test_end_to_end_with_scripted_model(monkeypatch):
+    quote = "spam filter sorts incoming email"
+    ref = [{"chunk_id": "doc1:1", "quote": quote}]
+
+    def chat(messages, tools=None):
+        if messages[0]["content"] == agents.VERIFIER_PROMPT:
+            return {"role": "assistant", "content": json.dumps({"verdicts": [
+                {"claim_id": c["claim_id"], "status": "supported", "reason": "ok"} for c in json.loads(messages[1]["content"])]})}
+        if "## Task: rate the obligations" in messages[-1]["content"]:
+            return {"role": "assistant", "content": json.dumps({"summary": "A spam filter.", "reasoning": "r", "statuses": []})}
+        return {"role": "assistant", "content": json.dumps({"answers": [
+            {"question": q, "answer": "yes", "statement": "It filters email.", "references": ref} for q in ("A1", "A3", "B2")]})}
+    monkeypatch.setattr(agents, "chat", chat)
     body = TestClient(api.app).post("/api/assess", data={"description": "A spam filter sorts incoming email."}).json()
-    evidence = body["report"]["claims"][0]["evidence"][0]
-    assert body["report"]["claims"][0]["status"] == "supported" and not body["revised"]
-    assert evidence["passage"][evidence["start"]:evidence["end"]] == "spam filter sorts incoming email"
+    assert body["report"]["overview"]["risk_tier"] == "minimal_risk" and body["report"]["decision"]["role"] == "deployer"
+    evidence = next(c for c in body["report"]["claims"] if c["id"] == "A1")["evidence"][0]
+    assert evidence["passage"][evidence["start"]:evidence["end"]] == quote
 
 
 def test_empty_or_oversized_case_is_422():
